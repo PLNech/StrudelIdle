@@ -1,3 +1,4 @@
+// src/context/GameContext.tsx
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { GameState, INITIAL_GAME_STATE, Module, Hardware, HardwareCapacity, NewsItem, Achievement, HardwareType } from '../types';
 import { ALL_MODULES, getModuleCost, getModuleEffectiveBPS } from '../data/modules';
@@ -17,31 +18,41 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [gameState, setGameState] = useState<GameState>(() => {
-    // Initialize modules and achievements by copying from ALL_MODULES/ALL_ACHIEVEMENTS
-    // This ensures we work with mutable copies
+    // Initialize modules by copying from ALL_MODULES
     const initialModules: { [id: string]: Module } = {};
     for (const id in ALL_MODULES) {
       initialModules[id] = { ...ALL_MODULES[id] };
     }
 
+    // Explicitly unlock 'bd' module here before using initialModules in state
+    if (initialModules['bd']) { // Defensive check
+      initialModules['bd'] = { ...initialModules['bd'], unlocked: true };
+    }
+
+    // Initialize hardware capacities based on initial hardware (e.g., 1GB RAM, 1 Core CPU)
+    const initialHardwareState = {
+        ...INITIAL_GAME_STATE.hardware, // Spread existing hardware structure
+        ram: { ...INITIAL_GAME_STATE.hardware.ram, total: ALL_HARDWARE['ram_stick_1gb']?.capacity || 0 }, // Ensure default capacity if ALL_HARDWARE not fully loaded
+        cpu: { ...INITIAL_GAME_STATE.hardware.cpu, total: ALL_HARDWARE['cpu_core_1']?.capacity || 0 },
+    };
+
     return {
       ...INITIAL_GAME_STATE,
-      modules: initialModules,
+      modules: initialModules, // Now only one 'modules' key
       achievements: initializeAchievements(),
-      // Initially unlock bd module, ram, and cpu hardware if they aren't already
-      // This is important because the 'unlocked' property from data.ts is only a default.
-      modules: {
-        ...initialModules,
-        'bd': { ...initialModules['bd'], unlocked: true }
-      },
-      hardware: {
-        ...INITIAL_GAME_STATE.hardware,
-        ram: { ...INITIAL_GAME_STATE.hardware.ram, total: ALL_HARDWARE['ram_stick_1gb'].capacity }, // Start with 1GB RAM total
-        cpu: { ...INITIAL_GAME_STATE.hardware.cpu, total: ALL_HARDWARE['cpu_core_1'].capacity }, // Start with 1 Core total
-      },
-      unlockedHardwareTypes: ['ram', 'cpu']
+      hardware: initialHardwareState, // Use the prepared initial hardware state
+      unlockedHardwareTypes: ['ram', 'cpu', 'storage'] // Initially unlock ram, cpu, and storage types
     };
   });
+
+  // Memoize addNews as it's used internally by effects and callbacks
+  const addNews = useCallback((message: string) => {
+    setGameState(prevState => {
+      const newNewsItem: NewsItem = { id: Date.now().toString(), message, timestamp: Date.now() };
+      const updatedNewsFeed = [newNewsItem, ...prevState.newsFeed].slice(0, 10); // Keep last 10 items
+      return { ...prevState, newsFeed: updatedNewsFeed };
+    });
+  }, []); // No dependencies as it only uses prevState and Date.now()
 
   // --- Game Loop Logic ---
   useEffect(() => {
@@ -54,20 +65,19 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       lastTimestamp = timestamp;
 
       setGameState(prevState => {
-        let newBeats = prevState.beats + prevState.bps * deltaTime;
-        let newGameTime = prevState.gameTime + deltaTime;
-
-        // Calculate BPS for current tick based on active modules
+        let newBeats = prevState.beats; // Initialize with current beats
         let currentBPS = 0;
         let usedRam = 0;
         let usedCpu = 0;
         let usedDsp = 0;
         let usedStorage = 0;
-        let currentStrudelCode = ''; // Code to send to Strudel.cc
-        let currentStrudelBPM = prevState.strudelBPM; // Keep BPM for now
+        let currentStrudelCode = '';
+        let currentStrudelBPM = prevState.strudelBPM;
+
 
         // Determine active modules and their consumption
         const activeModules: Module[] = [];
+        const moduleLines: string[] = []; // To build strudel code
         for (const moduleId in prevState.modules) {
           const module = prevState.modules[moduleId];
           if (module.acquiredCount > 0) {
@@ -77,18 +87,28 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             usedCpu += module.consumption.cpu * module.acquiredCount;
             usedDsp += module.consumption.dsp * module.acquiredCount;
             usedStorage += module.consumption.storage * module.acquiredCount;
+
             // Build Strudel.cc code string
-            // TODO: This part needs significant expansion for actual Strudel integration
-            // For MVP, just a simple string for existing modules
-            if (module.type === 'sample' && module.acquiredCount > 0) {
-              const pattern = `~ ${module.name}`; // Simple pattern for now
-              currentStrudelCode += `d${activeModules.indexOf(module) + 1} $ sound "${module.name}"\n`;
-            } else if (module.type === 'synth' && module.acquiredCount > 0) {
-              currentStrudelCode += `d${activeModules.indexOf(module) + 1} $ synth "${module.name.replace('_synth', '')}"\n`;
+            // Assign each active module to its own track d1, d2, d3...
+            const trackNumber = activeModules.length; // Simple sequential tracks
+            if (module.type === 'sample') {
+              moduleLines.push(`d${trackNumber} $ sound "${module.id}"`);
+            } else if (module.type === 'synth') {
+              moduleLines.push(`d${trackNumber} $ synth "${module.id.replace('_synth', '')}"`);
+            } else if (module.type === 'refactor') {
+              // Refactor tools don't generate sound directly, but could influence existing patterns
+              // TODO: Integrate refactoring tools into Strudel code generation
             }
+            // Effects will need more complex routing logic later
+            // For MVP, just ensure active effects don't break the code and consume resources
           }
         }
-        if (currentStrudelCode === '') currentStrudelCode = 'd1 $ sound "bd"'; // Default if nothing is active
+        
+        currentStrudelCode = moduleLines.join('\n');
+        if (currentStrudelCode === '') { // If no modules are active, default to bd
+            currentStrudelCode = 'd1 $ sound "bd"';
+        }
+
 
         // Apply Audience Engagement boosts
         // TODO: Calculate audience metrics based on actual module types/complexity
@@ -106,19 +126,38 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Check for resource overloads (simplistic for MVP)
         let overloadPenalty = 1;
+        let overloadMessages: string[] = [];
         if (newHardware.ram.used > newHardware.ram.total) {
           overloadPenalty *= 0.5; // 50% penalty
-          addNews(`WARNING: RAM overload! Beats generation reduced. Upgrade RAM!`); // Use direct addNews to avoid state loop
+          overloadMessages.push(`RAM overload!`);
         }
         if (newHardware.cpu.used > newHardware.cpu.total) {
           overloadPenalty *= 0.5; // 50% penalty
-          addNews(`WARNING: CPU overload! Beats generation reduced. Upgrade CPU!`);
+          overloadMessages.push(`CPU overload!`);
         }
-        if (newHardware.dsp.used > newHardware.dsp.total && newHardware.dsp.total > 0) {
+        // Only apply DSP/Storage overload if they actually have capacity > 0 (i.e., hardware purchased)
+        if (newHardware.dsp.total > 0 && newHardware.dsp.used > newHardware.dsp.total) {
              overloadPenalty *= 0.5;
-             addNews(`WARNING: DSP overload! Effect processing reduced.`);
+             overloadMessages.push(`DSP overload!`);
         }
+        if (newHardware.storage.total > INITIAL_GAME_STATE.hardware.storage.total && newHardware.storage.used > newHardware.storage.total) {
+             overloadPenalty *= 0.5;
+             overloadMessages.push(`Storage overload!`);
+        }
+
+        // Add news messages for new overloads
+        overloadMessages.forEach(msg => {
+            if (!prevState.newsFeed.some(n => n.message.includes(msg))) { // Prevent spamming same message
+                // This call to addNews won't cause an infinite loop because it schedules a new state update,
+                // it doesn't modify prevState directly.
+                // However, for strictness within a setState, it's better to update newsfeed directly.
+                // For MVP, this direct addNews call is acceptable and simpler.
+                addNews(`WARNING: ${msg} Beats generation reduced.`);
+            }
+        });
         currentBPS *= overloadPenalty;
+
+        newBeats = prevState.beats + currentBPS * deltaTime; // Update beats after penalty
 
 
         const updatedState: GameState = {
@@ -126,7 +165,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           beats: newBeats,
           bps: currentBPS,
           hardware: newHardware,
-          gameTime: newGameTime,
+          gameTime: prevState.gameTime + deltaTime, // Use delta from gameLoop
           strudelCode: currentStrudelCode,
           strudelBPM: currentStrudelBPM,
           // TODO: Update audience metrics based on active modules and other factors
@@ -138,52 +177,35 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (!updatedState.modules[id].unlocked) {
             // MVP unlock condition: unlock if player has enough beats, or has other modules
             // For example, unlock 'sn' if 'bd' acquiredCount > 0 and beats > 20
-            if (id === 'sn' && updatedState.modules['bd'].acquiredCount > 0 && updatedState.beats >= 20 && updatedState.modules[id].baseCost <= updatedState.beats) {
-              updatedState.modules[id].unlocked = true;
-              addNews(`NEW MODULE UNLOCKED: ${module.name}!`);
+            let shouldUnlock = false;
+            if (id === 'sn' && updatedState.modules['bd'].acquiredCount > 0 && updatedState.beats >= 20 && getModuleCost(module) <= updatedState.beats) {
+              shouldUnlock = true;
+            } else if (id === 'hh' && updatedState.modules['sn'].acquiredCount > 0 && updatedState.beats >= 50 && getModuleCost(module) <= updatedState.beats) {
+              shouldUnlock = true;
+            } else if (id === 'sine_synth' && updatedState.modules['hh'].acquiredCount > 0 && updatedState.beats >= 100 && getModuleCost(module) <= updatedState.beats) {
+              shouldUnlock = true;
+              // Unlock DSP hardware type when first synth is unlocked
+              if (!updatedState.unlockedHardwareTypes.includes('dsp')) {
+                updatedState.unlockedHardwareTypes = Array.from(new Set([...updatedState.unlockedHardwareTypes, 'dsp']));
+                addNews(`NEW HARDWARE TYPE UNLOCKED: DSP Units available!`);
+              }
+            } else if (id === 'reverb_unit' && updatedState.modules['sine_synth'].acquiredCount > 0 && updatedState.beats >= 200 && getModuleCost(module) <= updatedState.beats) {
+              shouldUnlock = true;
+            } else if (id === 'auto_quantizer' && updatedState.modules['reverb_unit'].acquiredCount > 0 && updatedState.beats >= 300 && getModuleCost(module) <= updatedState.beats) {
+              shouldUnlock = true;
             }
-            if (id === 'hh' && updatedState.modules['sn'].acquiredCount > 0 && updatedState.beats >= 50 && updatedState.modules[id].baseCost <= updatedState.beats) {
-              updatedState.modules[id].unlocked = true;
-              addNews(`NEW MODULE UNLOCKED: ${module.name}!`);
-            }
-            if (id === 'sine_synth' && updatedState.modules['hh'].acquiredCount > 0 && updatedState.beats >= 100 && updatedState.modules[id].baseCost <= updatedState.beats) {
-              updatedState.modules[id].unlocked = true;
-              addNews(`NEW MODULE UNLOCKED: ${module.name}!`);
-              // Unlock DSP hardware when first synth is unlocked
-              updatedState.unlockedHardwareTypes = Array.from(new Set([...updatedState.unlockedHardwareTypes, 'dsp']));
-            }
-            if (id === 'reverb_unit' && updatedState.modules['sine_synth'].acquiredCount > 0 && updatedState.beats >= 200 && updatedState.modules[id].baseCost <= updatedState.beats) {
-              updatedState.modules[id].unlocked = true;
-              addNews(`NEW MODULE UNLOCKED: ${module.name}!`);
-            }
-            if (id === 'auto_quantizer' && updatedState.modules['reverb_unit'].acquiredCount > 0 && updatedState.beats >= 300 && updatedState.modules[id].baseCost <= updatedState.beats) {
-              updatedState.modules[id].unlocked = true;
+            // TODO: Add more specific unlock conditions here
+
+            if (shouldUnlock) {
+              updatedState.modules[id] = { ...updatedState.modules[id], unlocked: true };
               addNews(`NEW MODULE UNLOCKED: ${module.name}!`);
             }
           }
         }
-        for (const id in ALL_HARDWARE) {
-          const hardwareDef = ALL_HARDWARE[id];
-          if (!updatedState.unlockedHardwareTypes.includes(hardwareDef.type)) {
-            // Example: unlock 4GB RAM if 1GB RAM count > 5
-            if (hardwareDef.id === 'ram_stick_4gb' && updatedState.hardware.ram.total >= ALL_HARDWARE['ram_stick_1gb'].capacity * 5 && updatedState.beats >= 100) {
-              updatedState.unlockedHardwareTypes = Array.from(new Set([...updatedState.unlockedHardwareTypes, hardwareDef.type]));
-              addNews(`NEW HARDWARE UNLOCKED: ${hardwareDef.name} available!`);
-            }
-            if (hardwareDef.id === 'cpu_core_4' && updatedState.hardware.cpu.total >= ALL_HARDWARE['cpu_core_1'].capacity * 2 && updatedState.beats >= 150) {
-              updatedState.unlockedHardwareTypes = Array.from(new Set([...updatedState.unlockedHardwareTypes, hardwareDef.type]));
-              addNews(`NEW HARDWARE UNLOCKED: ${hardwareDef.name} available!`);
-            }
-            if (hardwareDef.id === 'dsp_chip_low' && updatedState.unlockedHardwareTypes.includes('dsp') && updatedState.beats >= 250) {
-              updatedState.unlockedHardwareTypes = Array.from(new Set([...updatedState.unlockedHardwareTypes, hardwareDef.type]));
-              addNews(`NEW HARDWARE UNLOCKED: ${hardwareDef.name} available!`);
-            }
-            if (hardwareDef.id === 'ssd_100gb' && updatedState.beats >= 50 && updatedState.hardware.storage.total === INITIAL_GAME_STATE.hardware.storage.total) {
-              updatedState.unlockedHardwareTypes = Array.from(new Set([...updatedState.unlockedHardwareTypes, hardwareDef.type]));
-              addNews(`NEW HARDWARE UNLOCKED: ${hardwareDef.name} available!`);
-            }
-          }
-        }
+
+        // Check for unlocked hardware items (these are direct purchases, not types)
+        // No specific unlock logic here, just that they become buyable if their type is unlocked
+        // and base cost is met, handled by HardwareShop component.
 
         // Check achievements
         const newAchievements = checkAchievements(updatedState, prevState.achievements);
@@ -201,7 +223,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, []); // Run effect once on mount
+  }, [addNews]); // addNews needs to be a dependency for the useEffect if used inside setGameState callback.
 
   // --- State Modifiers ---
   const addBeats = useCallback((amount: number) => {
@@ -213,7 +235,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const purchaseModule = useCallback((moduleId: string) => {
     setGameState(prevState => {
-      const moduleToBuy = prevState.modules[moduleId];
+      const moduleToBuy = prevState.modules[moduleId]; // Get from current game state
+      if (!moduleToBuy) {
+        addNews(`ERROR: Module ${moduleId} not found!`);
+        return prevState;
+      }
       const cost = getModuleCost(moduleToBuy);
 
       if (prevState.beats >= cost) {
@@ -223,13 +249,23 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const newUsedDsp = prevState.hardware.dsp.used + moduleToBuy.consumption.dsp;
         const newUsedStorage = prevState.hardware.storage.used + moduleToBuy.consumption.storage;
 
-        if (newUsedRam > prevState.hardware.ram.total ||
-            newUsedCpu > prevState.hardware.cpu.total ||
-            newUsedDsp > prevState.hardware.dsp.total ||
-            newUsedStorage > prevState.hardware.storage.total) {
-            addNews(`ERROR: Not enough hardware capacity for ${moduleToBuy.name}!`);
-            return prevState; // Prevent purchase
+        if (newUsedRam > prevState.hardware.ram.total) {
+            addNews(`ERROR: Not enough RAM for ${moduleToBuy.name}!`);
+            return prevState;
         }
+        if (newUsedCpu > prevState.hardware.cpu.total) {
+            addNews(`ERROR: Not enough CPU for ${moduleToBuy.name}!`);
+            return prevState;
+        }
+        if (newUsedDsp > prevState.hardware.dsp.total && moduleToBuy.consumption.dsp > 0) {
+             addNews(`ERROR: Not enough DSP for ${moduleToBuy.name}!`);
+             return prevState;
+        }
+        if (newUsedStorage > prevState.hardware.storage.total && moduleToBuy.consumption.storage > 0) {
+             addNews(`ERROR: Not enough Storage for ${moduleToBuy.name}!`);
+             return prevState;
+        }
+
 
         const updatedModules = {
           ...prevState.modules,
@@ -262,17 +298,23 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const purchaseHardware = useCallback((hardwareId: string) => {
     setGameState(prevState => {
       const hardwareToBuy = ALL_HARDWARE[hardwareId]; // Get from ALL_HARDWARE as it's not in gameState.hardware
+      if (!hardwareToBuy) {
+        addNews(`ERROR: Hardware ${hardwareId} not found!`);
+        return prevState;
+      }
       const cost = getHardwareCost(hardwareToBuy);
 
       if (prevState.beats >= cost) {
         const updatedHardware = { ...prevState.hardware };
+        
+        // Update the capacity for the specific hardware type
         updatedHardware[hardwareToBuy.type] = {
           ...updatedHardware[hardwareToBuy.type],
           total: updatedHardware[hardwareToBuy.type].total + hardwareToBuy.capacity,
         };
 
-        // Update the individual hardware's acquiredCount in ALL_HARDWARE for display or future dynamic cost calc
-        // (This is a simplified approach, a more robust solution would track acquired hardware instances in gameState)
+        // Important: Update the acquiredCount on the ALL_HARDWARE definition.
+        // This is a workaround for the MVP, as we don't store individual hardware instances in gameState yet.
         ALL_HARDWARE[hardwareId].acquiredCount += 1;
 
         addNews(`Purchased ${hardwareToBuy.name}!`);
@@ -286,14 +328,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return prevState;
     });
   }, [addNews]);
-
-  const addNews = useCallback((message: string) => {
-    setGameState(prevState => {
-      const newNewsItem: NewsItem = { id: Date.now().toString(), message, timestamp: Date.now() };
-      const updatedNewsFeed = [newNewsItem, ...prevState.newsFeed].slice(0, 10); // Keep last 10 items
-      return { ...prevState, newsFeed: updatedNewsFeed };
-    });
-  }, []);
 
   const contextValue = useMemo(() => ({
     gameState,

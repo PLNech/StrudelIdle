@@ -1,14 +1,21 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
-import path from 'node:path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite'; 
 
-// https://vite.dev/config/
+// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
+  plugins: [
+    react(),
+    tailwindcss(), 
+  ],
+  optimizeDeps: {
+    // Exclude Strudel packages AND escodegen from pre-bundling to resolve import issues
+    exclude: [
+      '@strudel/core',
+      '@strudel/mini',
+      '@strudel/transpiler',
+      '@strudel/webaudio',
+      'escodegen' // <--- ADDED THIS LINE
+    ],
   },
-})
+});

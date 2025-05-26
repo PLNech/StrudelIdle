@@ -1,6 +1,6 @@
 // src/hooks/useStrudelEngine.ts
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { core } from '@strudel/core';
+import { core } from '@strudel/core'; // <--- CHANGED BACK: Import 'core' as a named export
 import { mini } from '@strudel/mini';
 import { transpiler } from '@strudel/transpiler';
 import { webaudio } from '@strudel/webaudio';
@@ -15,11 +15,14 @@ const initStrudel = async () => {
   
   // Attempt to initialize WebAudio output first to get user gesture
   const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-  await audioContext.resume(); // Resume if suspended by browser policy
+  // Request user gesture if AudioContext is suspended
+  if (audioContext.state === 'suspended') {
+    await audioContext.resume();
+  }
   console.log('AudioContext state:', audioContext.state);
-
+  
   try {
-    tidal = core({
+    tidal = core({ // core should now be the named export
       _scheduler: {
         scheduler: webaudio.scheduler(audioContext),
       },
@@ -39,15 +42,17 @@ const playStrudelPattern = (code: string, bpm: number) => {
     console.warn('Strudel.cc not initialized, cannot play pattern.');
     return;
   }
-
+  
   // Clear previous pattern
   if (currentPatternId !== null) {
     tidal.stop(currentPatternId);
   }
   
   // Set BPM
-  (tidal as any)._scheduler.setBPM(bpm); // Direct access for MVP, might need to be exposed better by strudel
-
+  // Directly setting BPM like this is a bit hacky, but often works for MVP with strudel.
+  // A more robust solution might involve a dedicated Strudel function for BPM or re-initializing the scheduler.
+  (tidal as any)._scheduler.setBPM(bpm);
+  
   try {
     // Evaluate the new pattern
     currentPatternId = tidal.eval(code);
@@ -69,34 +74,39 @@ const stopStrudel = () => {
 export const useStrudelEngine = (code: string, bpm: number, autoStart: boolean = false) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioInitializedRef = useRef(false);
-
+  
   // Effect to initialize Strudel on first interaction or mount
   useEffect(() => {
+    // We want to initialize only once and preferably after a user gesture.
+    // The togglePlay button handles the user gesture.
+    // If autoStart is true (e.g., for testing or if save loads a playing state),
+    // we'll try to initialize immediately, but still need user gesture for audio.
     if (autoStart && !audioInitializedRef.current) {
       initStrudel().then(() => {
         audioInitializedRef.current = true;
-        // Automatically start playing if autoStart is true and it's the first time
-        if (code && isPlaying) { // Only play if already "playing" (e.g., loaded from save)
-             playStrudelPattern(code, bpm);
+        // If the game was saved in a playing state, attempt to resume playback.
+        if (code && isPlaying) {
+          playStrudelPattern(code, bpm);
         }
       });
     }
   }, [autoStart, code, bpm, isPlaying]);
-
+  
   // Effect to update the playing pattern when code or BPM changes
   useEffect(() => {
     if (isPlaying && audioInitializedRef.current) {
       playStrudelPattern(code, bpm);
     }
   }, [code, bpm, isPlaying]);
-
+  
   const togglePlay = useCallback(async () => {
     if (!audioInitializedRef.current) {
-      // Prompt user gesture on first play attempt
+      // Ensure audio context is resumed by user gesture on first play attempt
       await initStrudel();
       audioInitializedRef.current = true;
     }
-
+    
+    
     if (isPlaying) {
       stopStrudel();
       setIsPlaying(false);
@@ -104,7 +114,9 @@ export const useStrudelEngine = (code: string, bpm: number, autoStart: boolean =
       playStrudelPattern(code, bpm);
       setIsPlaying(true);
     }
+    
+    
   }, [code, bpm, isPlaying]);
-
+  
   return { togglePlay, isPlaying, strudelReady: audioInitializedRef.current };
 };
