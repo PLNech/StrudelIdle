@@ -5,12 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "build": "tsc && vite build",
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
+    "lint:fix": "eslint src --ext ts,tsx --fix"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
+    "@strudel/core": "^1.2.1",
+    "@strudel/mini": "^1.2.1",
+    "@strudel/transpiler": "^1.2.1",
+    "@strudel/webaudio": "^1.2.2",
     "@tailwindcss/vite": "^4.1.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
