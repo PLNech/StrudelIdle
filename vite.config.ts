@@ -9,13 +9,15 @@ export default defineConfig({
     tailwindcss(), 
   ],
   optimizeDeps: {
-    // Exclude Strudel packages AND escodegen from pre-bundling to resolve import issues
+    // Exclude Strudel packages from pre-bundling to resolve import issues
     exclude: [
       '@strudel/core',
       '@strudel/mini',
       '@strudel/transpiler',
       '@strudel/webaudio',
-      'escodegen' // <--- ADDED THIS LINE
     ],
+  },
+  define: {
+    global: 'globalThis',
   },
 });

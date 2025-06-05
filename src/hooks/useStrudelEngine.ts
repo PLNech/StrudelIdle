@@ -1,13 +1,13 @@
 // src/hooks/useStrudelEngine.ts
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { core } from '@strudel/core'; // <--- CHANGED BACK: Import 'core' as a named export
+import { repl } from '@strudel/core';
 import { mini } from '@strudel/mini';
-import { transpiler } from '@strudel/transpiler';
+// import { transpiler } from '@strudel/transpiler'; // Temporarily disabled due to escodegen issue
 import { webaudio } from '@strudel/webaudio';
 
 // Initialize Strudel.cc engine outside the component to avoid re-initialization
 let strudelInitialized = false;
-let tidal: ReturnType<typeof core> | null = null;
+let tidal: ReturnType<typeof repl> | null = null;
 let currentPatternId: number | null = null;
 
 const initStrudel = async () => {
@@ -22,11 +22,9 @@ const initStrudel = async () => {
   console.log('AudioContext state:', audioContext.state);
   
   try {
-    tidal = core({ // core should now be the named export
-      _scheduler: {
-        scheduler: webaudio.scheduler(audioContext),
-      },
-      _plugins: [mini, transpiler],
+    tidal = repl({
+      scheduler: webaudio.scheduler(audioContext),
+      plugins: [mini], // Removed transpiler temporarily
     });
     console.log('Strudel.cc initialized:', tidal);
     strudelInitialized = true;
@@ -49,9 +47,12 @@ const playStrudelPattern = (code: string, bpm: number) => {
   }
   
   // Set BPM
-  // Directly setting BPM like this is a bit hacky, but often works for MVP with strudel.
-  // A more robust solution might involve a dedicated Strudel function for BPM or re-initializing the scheduler.
-  (tidal as any)._scheduler.setBPM(bpm);
+  // For repl, we might need to use a different method to set BPM
+  try {
+    (tidal as any).setBPM?.(bpm) || ((tidal as any).scheduler?.setBPM?.(bpm));
+  } catch (e) {
+    console.warn('Could not set BPM:', e);
+  }
   
   try {
     // Evaluate the new pattern
