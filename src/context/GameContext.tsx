@@ -300,31 +300,36 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // TODO: Update audience metrics based on active modules and other factors
         };
 
+        // Helper function to safely check module acquisition count
+        const getModuleCount = (moduleId: string): number => {
+          return updatedState.modules[moduleId]?.acquiredCount || 0;
+        };
+
         // Check for unlocked modules based on Strudel progression phases
         for (const id in STRUDEL_MODULES) {
           const module = STRUDEL_MODULES[id];
-          if (!updatedState.modules[id].unlocked) {
+          if (updatedState.modules[id] && !updatedState.modules[id].unlocked) {
             let shouldUnlock = false;
             
             // Phase 1: First Sounds (0-100 beats)
-            if (id === 'hh_basic' && updatedState.modules['bd_basic'].acquiredCount > 0 && updatedState.beats >= 10) {
+            if (id === 'hh_basic' && getModuleCount('bd_basic') > 0 && updatedState.beats >= 10) {
               shouldUnlock = true;
-            } else if (id === 'sd_basic' && updatedState.modules['hh_basic'].acquiredCount > 0 && updatedState.beats >= 50) {
+            } else if (id === 'sd_basic' && getModuleCount('hh_basic') > 0 && updatedState.beats >= 50) {
               shouldUnlock = true;
-            } else if (id === 'oh_basic' && updatedState.modules['sd_basic'].acquiredCount > 0 && updatedState.beats >= 75) {
+            } else if (id === 'oh_basic' && getModuleCount('sd_basic') > 0 && updatedState.beats >= 75) {
               shouldUnlock = true;
-            } else if (id === 'sample_variations' && updatedState.modules['oh_basic'].acquiredCount > 0 && updatedState.beats >= 100) {
+            } else if (id === 'sample_variations' && getModuleCount('oh_basic') > 0 && updatedState.beats >= 100) {
               shouldUnlock = true;
             }
             
             // Phase 2: Mini-notation basics (100-500 beats)
-            else if (id === 'sequence_builder' && updatedState.beats >= 120 && updatedState.modules['hh_basic'].acquiredCount > 0) {
+            else if (id === 'sequence_builder' && updatedState.beats >= 120 && getModuleCount('hh_basic') > 0) {
               shouldUnlock = true;
-            } else if (id === 'rest_notes' && updatedState.modules['sequence_builder'].acquiredCount > 0 && updatedState.beats >= 150) {
+            } else if (id === 'rest_notes' && getModuleCount('sequence_builder') > 0 && updatedState.beats >= 150) {
               shouldUnlock = true;
-            } else if (id === 'speed_multiplier' && updatedState.modules['rest_notes'].acquiredCount > 0 && updatedState.beats >= 200) {
+            } else if (id === 'speed_multiplier' && getModuleCount('rest_notes') > 0 && updatedState.beats >= 200) {
               shouldUnlock = true;
-            } else if (id === 'slow_division' && updatedState.modules['speed_multiplier'].acquiredCount > 0 && updatedState.beats >= 250) {
+            } else if (id === 'slow_division' && getModuleCount('speed_multiplier') > 0 && updatedState.beats >= 250) {
               shouldUnlock = true;
             }
             
