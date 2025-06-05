@@ -82,7 +82,8 @@ export interface GameState {
   audienceComplexity: number; // 0-100 scale, unlocks special modules
   // Strudel.cc related
   strudelCode: string; // The current Strudel.cc code being played
-  strudelBPM: number; // The current BPM for Strudel.cc
+  strudelBPM: number; // The current BPM for Strudel.cc (visible to user)
+  hasLooping: boolean; // Whether looping is enabled
 }
 
 // Initial game state for a new game
@@ -104,6 +105,7 @@ export const INITIAL_GAME_STATE: GameState = {
   audienceExcitement: 10, // Small starting audience
   audienceCohesion: 50,
   audienceComplexity: 0,
-  strudelCode: 'd1 $ sound "bd"', // Initial sound
-  strudelBPM: 120, // Initial BPM
+  strudelCode: 's("bd")', // Initial sound
+  strudelBPM: 60, // Very slow at first
+  hasLooping: false, // No looping initially
 };

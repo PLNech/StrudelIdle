@@ -8,6 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Start development server**: `npm run dev`
 - **Build for production**: `npm run build` (runs TypeScript compilation then Vite build)
 - **Preview production build**: `npm run preview`
+- **Clearing vite cache**: `rm -rf node_modules/.vite`
 
 ### Code Quality
 - **Lint code**: `npm run lint` (ESLint with strict TypeScript rules)

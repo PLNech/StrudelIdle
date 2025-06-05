@@ -7,6 +7,7 @@ import { ALL_ACHIEVEMENTS, initializeAchievements, checkAchievements } from '../
 
 interface GameContextType {
   gameState: GameState;
+  setGameState: React.Dispatch<React.SetStateAction<GameState>>;
   addBeats: (amount: number) => void;
   purchaseModule: (moduleId: string) => void;
   purchaseHardware: (hardwareId: string) => void;
@@ -73,6 +74,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let usedStorage = 0;
         let currentStrudelCode = '';
         let currentStrudelBPM = prevState.strudelBPM;
+        let currentHasLooping = prevState.hasLooping;
 
 
         // Determine active modules and their consumption
@@ -88,25 +90,47 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             usedDsp += module.consumption.dsp * module.acquiredCount;
             usedStorage += module.consumption.storage * module.acquiredCount;
 
-            // Build Strudel.cc code string
-            // Assign each active module to its own track d1, d2, d3...
-            const trackNumber = activeModules.length; // Simple sequential tracks
+            // Build Strudel.cc code string (JavaScript syntax)
             if (module.type === 'sample') {
-              moduleLines.push(`d${trackNumber} $ sound "${module.id}"`);
+              moduleLines.push(`s("${module.id}")`);
             } else if (module.type === 'synth') {
-              moduleLines.push(`d${trackNumber} $ synth "${module.id.replace('_synth', '')}"`);
+              const synthName = module.id.replace('_synth', '');
+              moduleLines.push(`note("c3 e3 g3").s("${synthName}")`);
+            } else if (module.type === 'effect') {
+              // Effects will be applied to existing patterns
+              // For now, just add as a modifier
+              moduleLines.push(`// Effect: ${module.name}`);
             } else if (module.type === 'refactor') {
-              // Refactor tools don't generate sound directly, but could influence existing patterns
-              // TODO: Integrate refactoring tools into Strudel code generation
+              // Handle refactor tools that affect playback
+              if (module.id === 'loop_enable') {
+                currentHasLooping = true;
+              } else if (module.id === 'bpm_upgrade_1') {
+                currentStrudelBPM = 90;
+              } else if (module.id === 'bpm_upgrade_2') {
+                currentStrudelBPM = 120;
+              } else if (module.id === 'bpm_upgrade_3') {
+                currentStrudelBPM = 150;
+              }
             }
-            // Effects will need more complex routing logic later
-            // For MVP, just ensure active effects don't break the code and consume resources
           }
         }
         
-        currentStrudelCode = moduleLines.join('\n');
-        if (currentStrudelCode === '') { // If no modules are active, default to bd
-            currentStrudelCode = 'd1 $ sound "bd"';
+        // Build the final Strudel code
+        if (moduleLines.length === 0) {
+            // If no modules are active, default to bd
+            currentStrudelCode = 's("bd")';
+        } else if (moduleLines.length === 1) {
+            currentStrudelCode = moduleLines[0];
+        } else {
+            // Stack multiple patterns
+            currentStrudelCode = moduleLines[0] + '.stack(' + moduleLines.slice(1).join(', ') + ')';
+        }
+        
+        // Add BPM to the pattern if we have looping enabled
+        if (currentHasLooping) {
+            // Convert BPM to CPS for Strudel (BPM / 60 / 4 for quarter note patterns)
+            const cps = currentStrudelBPM / 60 / 4;
+            currentStrudelCode = `${currentStrudelCode}.cps(${cps})`;
         }
 
 
@@ -168,6 +192,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           gameTime: prevState.gameTime + deltaTime, // Use delta from gameLoop
           strudelCode: currentStrudelCode,
           strudelBPM: currentStrudelBPM,
+          hasLooping: currentHasLooping,
           // TODO: Update audience metrics based on active modules and other factors
         };
 
@@ -192,6 +217,24 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             } else if (id === 'reverb_unit' && updatedState.modules['sine_synth'].acquiredCount > 0 && updatedState.beats >= 200 && getModuleCost(module) <= updatedState.beats) {
               shouldUnlock = true;
             } else if (id === 'auto_quantizer' && updatedState.modules['reverb_unit'].acquiredCount > 0 && updatedState.beats >= 300 && getModuleCost(module) <= updatedState.beats) {
+              shouldUnlock = true;
+            } else if (id === 'cp' && updatedState.modules['hh'].acquiredCount > 0 && updatedState.beats >= 150) {
+              shouldUnlock = true;
+            } else if (id === 'arpy' && updatedState.modules['cp'].acquiredCount > 0 && updatedState.beats >= 250) {
+              shouldUnlock = true;
+            } else if (id === 'bass' && updatedState.modules['arpy'].acquiredCount > 0 && updatedState.beats >= 400) {
+              shouldUnlock = true;
+            } else if (id === 'perc' && updatedState.modules['cp'].acquiredCount > 0 && updatedState.beats >= 200) {
+              shouldUnlock = true;
+            } else if (id === 'drum' && updatedState.modules['bass'].acquiredCount > 0 && updatedState.beats >= 600) {
+              shouldUnlock = true;
+            } else if (id === 'loop_enable' && updatedState.modules['sn'].acquiredCount > 0 && updatedState.beats >= 80) {
+              shouldUnlock = true;
+            } else if (id === 'bpm_upgrade_1' && updatedState.modules['loop_enable'].acquiredCount > 0 && updatedState.beats >= 300) {
+              shouldUnlock = true;
+            } else if (id === 'bpm_upgrade_2' && updatedState.modules['bpm_upgrade_1'].acquiredCount > 0 && updatedState.beats >= 700) {
+              shouldUnlock = true;
+            } else if (id === 'bpm_upgrade_3' && updatedState.modules['bpm_upgrade_2'].acquiredCount > 0 && updatedState.beats >= 1500) {
               shouldUnlock = true;
             }
             // TODO: Add more specific unlock conditions here
@@ -331,11 +374,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const contextValue = useMemo(() => ({
     gameState,
+    setGameState,
     addBeats,
     purchaseModule,
     purchaseHardware,
     addNews,
-  }), [gameState, addBeats, purchaseModule, purchaseHardware, addNews]);
+  }), [gameState, setGameState, addBeats, purchaseModule, purchaseHardware, addNews]);
 
   return (
     <GameContext.Provider value={contextValue}>

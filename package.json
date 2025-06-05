@@ -11,13 +11,15 @@
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
     "lint:fix": "eslint src --ext ts,tsx --fix",
     "test": "playwright test",
-    "test:ui": "playwright test --ui"
+    "test:ui": "playwright test --ui",
+    "clear": "rm -rf node_modules/.vite"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
     "@strudel/core": "^1.2.1",
     "@strudel/mini": "^1.2.1",
     "@strudel/transpiler": "^1.2.1",
+    "@strudel/web": "^1.2.3",
     "@strudel/webaudio": "^1.2.2",
     "@tailwindcss/vite": "^4.1.7",
     "class-variance-authority": "^0.7.1",
@@ -45,6 +47,7 @@
     "globals": "^16.0.0",
     "postcss": "^8.5.3",
     "prettier": "^3.5.3",
+    "rimraf": "^6.0.1",
     "tailwindcss": "^4.1.7",
     "tw-animate-css": "^1.3.0",
     "typescript": "~5.8.3",

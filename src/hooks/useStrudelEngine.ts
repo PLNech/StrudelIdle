@@ -1,112 +1,103 @@
 // src/hooks/useStrudelEngine.ts
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { repl } from '@strudel/core';
-import { mini } from '@strudel/mini';
-// import { transpiler } from '@strudel/transpiler'; // Temporarily disabled due to escodegen issue
-import { webaudio } from '@strudel/webaudio';
+import { initStrudel } from '@strudel/web';
 
-// Initialize Strudel.cc engine outside the component to avoid re-initialization
+// Global state for Strudel initialization
 let strudelInitialized = false;
-let tidal: ReturnType<typeof repl> | null = null;
-let currentPatternId: number | null = null;
 
-const initStrudel = async () => {
+const initStrudelEngine = async () => {
   if (strudelInitialized) return;
   
-  // Attempt to initialize WebAudio output first to get user gesture
-  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-  // Request user gesture if AudioContext is suspended
-  if (audioContext.state === 'suspended') {
-    await audioContext.resume();
-  }
-  console.log('AudioContext state:', audioContext.state);
-  
   try {
-    tidal = repl({
-      scheduler: webaudio.scheduler(audioContext),
-      plugins: [mini], // Removed transpiler temporarily
+    console.log('Initializing Strudel.cc...');
+    // Initialize Strudel with optional sample preloading
+    await initStrudel({
+      prebake: () => (window as any).samples?.('github:tidalcycles/dirt-samples') || Promise.resolve(),
     });
-    console.log('Strudel.cc initialized:', tidal);
     strudelInitialized = true;
+    console.log('Strudel.cc initialized successfully!');
   } catch (error) {
     console.error('Error initializing Strudel.cc:', error);
-    // Fallback or display error message to user
+    // Try basic initialization without samples
+    try {
+      await initStrudel();
+      strudelInitialized = true;
+      console.log('Strudel.cc initialized without samples');
+    } catch (fallbackError) {
+      console.error('Failed to initialize Strudel.cc:', fallbackError);
+    }
   }
 };
 
 // Start playing a pattern
 const playStrudelPattern = (code: string, bpm: number) => {
-  if (!tidal) {
+  if (!strudelInitialized) {
     console.warn('Strudel.cc not initialized, cannot play pattern.');
     return;
   }
   
-  // Clear previous pattern
-  if (currentPatternId !== null) {
-    tidal.stop(currentPatternId);
-  }
-  
-  // Set BPM
-  // For repl, we might need to use a different method to set BPM
   try {
-    (tidal as any).setBPM?.(bpm) || ((tidal as any).scheduler?.setBPM?.(bpm));
-  } catch (e) {
-    console.warn('Could not set BPM:', e);
-  }
-  
-  try {
-    // Evaluate the new pattern
-    currentPatternId = tidal.eval(code);
-    console.log(`Strudel.cc playing: ${code} at ${bpm} BPM (Pattern ID: ${currentPatternId})`);
+    // Stop any existing patterns first
+    (window as any).hush?.();
+    
+    // Set BPM if available
+    if ((window as any).setBpm) {
+      (window as any).setBpm(bpm);
+    }
+    
+    console.log(`Playing Strudel pattern: ${code} at ${bpm} BPM`);
+    
+    // Evaluate the pattern using global evaluate function
+    if ((window as any).evaluate) {
+      (window as any).evaluate(code);
+    } else {
+      console.warn('Strudel evaluate function not available');
+    }
   } catch (error) {
-    console.error('Error evaluating Strudel.cc code:', error);
-    // Display error in news feed or UI
+    console.error('Error playing Strudel pattern:', error);
   }
 };
 
 const stopStrudel = () => {
-  if (tidal && currentPatternId !== null) {
-    tidal.stop(currentPatternId);
-    currentPatternId = null;
-    console.log('Strudel.cc stopped.');
+  try {
+    if ((window as any).hush) {
+      (window as any).hush();
+      console.log('Strudel.cc stopped.');
+    } else {
+      console.warn('Strudel hush function not available');
+    }
+  } catch (error) {
+    console.error('Error stopping Strudel:', error);
   }
 };
 
 export const useStrudelEngine = (code: string, bpm: number, autoStart: boolean = false) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const audioInitializedRef = useRef(false);
+  const [strudelReady, setStrudelReady] = useState(false);
   
-  // Effect to initialize Strudel on first interaction or mount
+  // Effect to initialize Strudel on mount
   useEffect(() => {
-    // We want to initialize only once and preferably after a user gesture.
-    // The togglePlay button handles the user gesture.
-    // If autoStart is true (e.g., for testing or if save loads a playing state),
-    // we'll try to initialize immediately, but still need user gesture for audio.
-    if (autoStart && !audioInitializedRef.current) {
-      initStrudel().then(() => {
-        audioInitializedRef.current = true;
-        // If the game was saved in a playing state, attempt to resume playback.
-        if (code && isPlaying) {
-          playStrudelPattern(code, bpm);
-        }
+    if (!strudelInitialized) {
+      initStrudelEngine().then(() => {
+        setStrudelReady(true);
       });
+    } else {
+      setStrudelReady(true);
     }
-  }, [autoStart, code, bpm, isPlaying]);
+  }, []);
   
   // Effect to update the playing pattern when code or BPM changes
   useEffect(() => {
-    if (isPlaying && audioInitializedRef.current) {
+    if (isPlaying && strudelReady) {
       playStrudelPattern(code, bpm);
     }
-  }, [code, bpm, isPlaying]);
+  }, [code, bpm, isPlaying, strudelReady]);
   
   const togglePlay = useCallback(async () => {
-    if (!audioInitializedRef.current) {
-      // Ensure audio context is resumed by user gesture on first play attempt
-      await initStrudel();
-      audioInitializedRef.current = true;
+    if (!strudelReady) {
+      console.warn('Strudel not ready yet');
+      return;
     }
-    
     
     if (isPlaying) {
       stopStrudel();
@@ -115,9 +106,7 @@ export const useStrudelEngine = (code: string, bpm: number, autoStart: boolean =
       playStrudelPattern(code, bpm);
       setIsPlaying(true);
     }
-    
-    
-  }, [code, bpm, isPlaying]);
+  }, [code, bpm, isPlaying, strudelReady]);
   
-  return { togglePlay, isPlaying, strudelReady: audioInitializedRef.current };
+  return { togglePlay, isPlaying, strudelReady };
 };
