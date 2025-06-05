@@ -1,5 +1,5 @@
 // src/hooks/useStrudelEngine.ts
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { initStrudel } from '@strudel/web';
 
 // Global state for Strudel initialization
@@ -71,7 +71,7 @@ const stopStrudel = () => {
   }
 };
 
-export const useStrudelEngine = (code: string, bpm: number, autoStart: boolean = false) => {
+export const useStrudelEngine = (code: string, bpm: number) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [strudelReady, setStrudelReady] = useState(false);
   
@@ -80,9 +80,12 @@ export const useStrudelEngine = (code: string, bpm: number, autoStart: boolean =
     if (!strudelInitialized) {
       initStrudelEngine().then(() => {
         setStrudelReady(true);
+        // Expose initialization status for testing
+        (window as any).strudelInitialized = true;
       });
     } else {
       setStrudelReady(true);
+      (window as any).strudelInitialized = true;
     }
   }, []);
   

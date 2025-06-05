@@ -1,9 +1,18 @@
 // src/context/GameContext.tsx
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { GameState, INITIAL_GAME_STATE, Module, Hardware, HardwareCapacity, NewsItem, Achievement, HardwareType } from '../types';
-import { ALL_MODULES, getModuleCost, getModuleEffectiveBPS } from '../data/modules';
+import { GameState, INITIAL_GAME_STATE, Module, NewsItem } from '../types';
+import { STRUDEL_MODULES } from '../data/strudelModules';
+
+// Utility functions for Strudel modules
+function getModuleCost(module: Module): number {
+  return module.baseCost * Math.pow(1.15, module.acquiredCount);
+}
+
+function getModuleEffectiveBPS(module: Module): number {
+  return module.bpsPerUnit * module.acquiredCount;
+}
 import { ALL_HARDWARE, getHardwareCost } from '../data/hardware';
-import { ALL_ACHIEVEMENTS, initializeAchievements, checkAchievements } from '../data/achievements';
+import { initializeAchievements, checkAchievements } from '../data/achievements';
 
 interface GameContextType {
   gameState: GameState;
@@ -19,15 +28,15 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [gameState, setGameState] = useState<GameState>(() => {
-    // Initialize modules by copying from ALL_MODULES
+    // Initialize modules by copying from STRUDEL_MODULES
     const initialModules: { [id: string]: Module } = {};
-    for (const id in ALL_MODULES) {
-      initialModules[id] = { ...ALL_MODULES[id] };
+    for (const id in STRUDEL_MODULES) {
+      initialModules[id] = { ...STRUDEL_MODULES[id] };
     }
 
-    // Explicitly unlock 'bd' module here before using initialModules in state
-    if (initialModules['bd']) { // Defensive check
-      initialModules['bd'] = { ...initialModules['bd'], unlocked: true };
+    // Explicitly unlock the first basic drum module
+    if (initialModules['bd_basic']) {
+      initialModules['bd_basic'] = { ...initialModules['bd_basic'], unlocked: true };
     }
 
     // Initialize hardware capacities based on initial hardware (e.g., 1GB RAM, 1 Core CPU)
@@ -73,7 +82,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let usedDsp = 0;
         let usedStorage = 0;
         let currentStrudelCode = '';
-        let currentStrudelBPM = prevState.strudelBPM;
+        const currentStrudelBPM = prevState.strudelBPM;
         let currentHasLooping = prevState.hasLooping;
 
 
@@ -90,45 +99,140 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             usedDsp += module.consumption.dsp * module.acquiredCount;
             usedStorage += module.consumption.storage * module.acquiredCount;
 
-            // Build Strudel.cc code string (JavaScript syntax)
+            // Build Strudel.cc code based on module type and progression
             if (module.type === 'sample') {
-              moduleLines.push(`s("${module.id}")`);
+              const sampleName = module.id.replace('_basic', '');
+              
+              // Apply sample variations if unlocked
+              if (prevState.modules['sample_variations']?.acquiredCount > 0) {
+                const variation = Math.floor(Math.random() * 3);
+                moduleLines.push(`sound("${sampleName}:${variation}")`);
+              } else {
+                moduleLines.push(`sound("${sampleName}")`);
+              }
             } else if (module.type === 'synth') {
-              const synthName = module.id.replace('_synth', '');
-              moduleLines.push(`note("c3 e3 g3").s("${synthName}")`);
+              if (module.id === 'note_c') {
+                moduleLines.push(`note("c")`);
+              } else if (module.id === 'note_scale') {
+                moduleLines.push(`note("c d e f g a b")`);
+              } else if (module.id === 'chord_triads') {
+                moduleLines.push(`note("c e g")`);
+              } else if (module.id === 'oscillator_bank') {
+                moduleLines.push(`note("c").s("sawtooth")`);
+              } else if (module.id === 'wavetable_synth') {
+                moduleLines.push(`note("c d e").s("square")`);
+              } else {
+                // Default synth pattern
+                moduleLines.push(`note("c3 e3 g3")`);
+              }
             } else if (module.type === 'effect') {
-              // Effects will be applied to existing patterns
-              // For now, just add as a modifier
-              moduleLines.push(`// Effect: ${module.name}`);
+              // Effects will be stored and applied later
             } else if (module.type === 'refactor') {
-              // Handle refactor tools that affect playback
+              // Handle pattern modification tools - these don't add sounds but modify patterns
               if (module.id === 'loop_enable') {
                 currentHasLooping = true;
-              } else if (module.id === 'bpm_upgrade_1') {
-                currentStrudelBPM = 90;
-              } else if (module.id === 'bpm_upgrade_2') {
-                currentStrudelBPM = 120;
-              } else if (module.id === 'bpm_upgrade_3') {
-                currentStrudelBPM = 150;
               }
             }
           }
         }
         
-        // Build the final Strudel code
+        // Build the final Strudel code with authentic progression features
         if (moduleLines.length === 0) {
-            // If no modules are active, default to bd
-            currentStrudelCode = 's("bd")';
-        } else if (moduleLines.length === 1) {
-            currentStrudelCode = moduleLines[0];
+            currentStrudelCode = 'sound("bd")';
         } else {
-            // Stack multiple patterns
-            currentStrudelCode = moduleLines[0] + '.stack(' + moduleLines.slice(1).join(', ') + ')';
+            let basePattern = '';
+            const patterns: string[] = [];
+            
+            // Separate sample and note patterns
+            const samplePatterns: string[] = [];
+            const notePatterns: string[] = [];
+            
+            moduleLines.forEach(line => {
+                if (line.includes('sound(')) {
+                    samplePatterns.push(line.replace('sound("', '').replace('")', ''));
+                } else if (line.includes('note(')) {
+                    notePatterns.push(line);
+                }
+            });
+            
+            // Build sequences based on unlocked capabilities
+            if (prevState.modules['sequence_builder']?.acquiredCount > 0) {
+                // Create proper sequences using mini-notation
+                if (samplePatterns.length > 0) {
+                    let sampleSequence = samplePatterns.join(' ');
+                    
+                    // Add rests if unlocked
+                    if (prevState.modules['rest_notes']?.acquiredCount > 0) {
+                        sampleSequence = sampleSequence.replace(/(\w+)/g, '$1 ~');
+                    }
+                    
+                    // Add speed multipliers if unlocked
+                    if (prevState.modules['speed_multiplier']?.acquiredCount > 0) {
+                        sampleSequence = sampleSequence.replace(/(\w+)/g, '$1*2');
+                    }
+                    
+                    // Add sub-sequences if unlocked
+                    if (prevState.modules['sub_sequences']?.acquiredCount > 0) {
+                        sampleSequence = sampleSequence.replace(/bd/g, 'bd [hh hh]');
+                    }
+                    
+                    // Add polyphony if unlocked
+                    if (prevState.modules['polyphony']?.acquiredCount > 0 && samplePatterns.length >= 2) {
+                        const firstPattern = samplePatterns[0];
+                        const secondPattern = samplePatterns[1];
+                        sampleSequence = `[${firstPattern},${secondPattern}] [${firstPattern}]`;
+                    }
+                    
+                    // Add cycling patterns if unlocked
+                    if (prevState.modules['cycling_patterns']?.acquiredCount > 0) {
+                        sampleSequence = `<${sampleSequence}>`;
+                    }
+                    
+                    // Add Euclidean rhythms if unlocked
+                    if (prevState.modules['euclidean_engine']?.acquiredCount > 0) {
+                        sampleSequence = sampleSequence.replace(/bd/g, 'bd(3,8)').replace(/hh/g, 'hh(2,5)');
+                    }
+                    
+                    patterns.push(`sound("${sampleSequence}")`);
+                }
+                
+                // Handle note patterns
+                if (notePatterns.length > 0) {
+                    patterns.push(...notePatterns);
+                }
+                
+                // Stack patterns if multiple exist
+                if (patterns.length > 1) {
+                    basePattern = patterns[0] + '.stack(' + patterns.slice(1).join(', ') + ')';
+                } else {
+                    basePattern = patterns[0] || 'sound("bd")';
+                }
+            } else {
+                // Simple stacking without sequence building
+                basePattern = moduleLines.length > 1 
+                    ? moduleLines[0] + '.stack(' + moduleLines.slice(1).join(', ') + ')'
+                    : moduleLines[0];
+            }
+            
+            // Apply effects if unlocked
+            let finalPattern = basePattern;
+            
+            if (prevState.modules['reverb_engine']?.acquiredCount > 0) {
+                finalPattern += '.room(0.3)';
+            }
+            if (prevState.modules['delay_unit']?.acquiredCount > 0) {
+                finalPattern += '.delay(0.25)';
+            }
+            if (prevState.modules['filter_bank']?.acquiredCount > 0) {
+                finalPattern += '.lpf(800)';
+            }
+            
+            currentStrudelCode = finalPattern;
         }
         
-        // Add BPM to the pattern if we have looping enabled
+        // Add BPM control if looping is enabled
         if (currentHasLooping) {
-            // Convert BPM to CPS for Strudel (BPM / 60 / 4 for quarter note patterns)
+            // Convert BPM to CPS for Strudel
             const cps = currentStrudelBPM / 60 / 4;
             currentStrudelCode = `${currentStrudelCode}.cps(${cps})`;
         }
@@ -150,7 +254,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Check for resource overloads (simplistic for MVP)
         let overloadPenalty = 1;
-        let overloadMessages: string[] = [];
+        const overloadMessages: string[] = [];
         if (newHardware.ram.used > newHardware.ram.total) {
           overloadPenalty *= 0.5; // 50% penalty
           overloadMessages.push(`RAM overload!`);
@@ -196,48 +300,88 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // TODO: Update audience metrics based on active modules and other factors
         };
 
-        // Check for unlocked modules/hardware based on criteria (e.g., beats, total BPS)
-        for (const id in ALL_MODULES) {
-          const module = ALL_MODULES[id];
+        // Check for unlocked modules based on Strudel progression phases
+        for (const id in STRUDEL_MODULES) {
+          const module = STRUDEL_MODULES[id];
           if (!updatedState.modules[id].unlocked) {
-            // MVP unlock condition: unlock if player has enough beats, or has other modules
-            // For example, unlock 'sn' if 'bd' acquiredCount > 0 and beats > 20
             let shouldUnlock = false;
-            if (id === 'sn' && updatedState.modules['bd'].acquiredCount > 0 && updatedState.beats >= 20 && getModuleCost(module) <= updatedState.beats) {
+            
+            // Phase 1: First Sounds (0-100 beats)
+            if (id === 'hh_basic' && updatedState.modules['bd_basic'].acquiredCount > 0 && updatedState.beats >= 10) {
               shouldUnlock = true;
-            } else if (id === 'hh' && updatedState.modules['sn'].acquiredCount > 0 && updatedState.beats >= 50 && getModuleCost(module) <= updatedState.beats) {
+            } else if (id === 'sd_basic' && updatedState.modules['hh_basic'].acquiredCount > 0 && updatedState.beats >= 50) {
               shouldUnlock = true;
-            } else if (id === 'sine_synth' && updatedState.modules['hh'].acquiredCount > 0 && updatedState.beats >= 100 && getModuleCost(module) <= updatedState.beats) {
+            } else if (id === 'oh_basic' && updatedState.modules['sd_basic'].acquiredCount > 0 && updatedState.beats >= 75) {
               shouldUnlock = true;
-              // Unlock DSP hardware type when first synth is unlocked
+            } else if (id === 'sample_variations' && updatedState.modules['oh_basic'].acquiredCount > 0 && updatedState.beats >= 100) {
+              shouldUnlock = true;
+            }
+            
+            // Phase 2: Mini-notation basics (100-500 beats)
+            else if (id === 'sequence_builder' && updatedState.beats >= 120 && updatedState.modules['hh_basic'].acquiredCount > 0) {
+              shouldUnlock = true;
+            } else if (id === 'rest_notes' && updatedState.modules['sequence_builder'].acquiredCount > 0 && updatedState.beats >= 150) {
+              shouldUnlock = true;
+            } else if (id === 'speed_multiplier' && updatedState.modules['rest_notes'].acquiredCount > 0 && updatedState.beats >= 200) {
+              shouldUnlock = true;
+            } else if (id === 'slow_division' && updatedState.modules['speed_multiplier'].acquiredCount > 0 && updatedState.beats >= 250) {
+              shouldUnlock = true;
+            }
+            
+            // Phase 3: Advanced notation (500-1500 beats)
+            else if (id === 'sub_sequences' && updatedState.beats >= 500 && updatedState.modules['slow_division'].acquiredCount > 0) {
+              shouldUnlock = true;
+            } else if (id === 'cycling_patterns' && updatedState.modules['sub_sequences'].acquiredCount > 0 && updatedState.beats >= 600) {
+              shouldUnlock = true;
+            } else if (id === 'polyphony' && updatedState.modules['cycling_patterns'].acquiredCount > 0 && updatedState.beats >= 800) {
+              shouldUnlock = true;
+              // Unlock DSP hardware type when polyphony is unlocked
               if (!updatedState.unlockedHardwareTypes.includes('dsp')) {
                 updatedState.unlockedHardwareTypes = Array.from(new Set([...updatedState.unlockedHardwareTypes, 'dsp']));
                 addNews(`NEW HARDWARE TYPE UNLOCKED: DSP Units available!`);
               }
-            } else if (id === 'reverb_unit' && updatedState.modules['sine_synth'].acquiredCount > 0 && updatedState.beats >= 200 && getModuleCost(module) <= updatedState.beats) {
-              shouldUnlock = true;
-            } else if (id === 'auto_quantizer' && updatedState.modules['reverb_unit'].acquiredCount > 0 && updatedState.beats >= 300 && getModuleCost(module) <= updatedState.beats) {
-              shouldUnlock = true;
-            } else if (id === 'cp' && updatedState.modules['hh'].acquiredCount > 0 && updatedState.beats >= 150) {
-              shouldUnlock = true;
-            } else if (id === 'arpy' && updatedState.modules['cp'].acquiredCount > 0 && updatedState.beats >= 250) {
-              shouldUnlock = true;
-            } else if (id === 'bass' && updatedState.modules['arpy'].acquiredCount > 0 && updatedState.beats >= 400) {
-              shouldUnlock = true;
-            } else if (id === 'perc' && updatedState.modules['cp'].acquiredCount > 0 && updatedState.beats >= 200) {
-              shouldUnlock = true;
-            } else if (id === 'drum' && updatedState.modules['bass'].acquiredCount > 0 && updatedState.beats >= 600) {
-              shouldUnlock = true;
-            } else if (id === 'loop_enable' && updatedState.modules['sn'].acquiredCount > 0 && updatedState.beats >= 80) {
-              shouldUnlock = true;
-            } else if (id === 'bpm_upgrade_1' && updatedState.modules['loop_enable'].acquiredCount > 0 && updatedState.beats >= 300) {
-              shouldUnlock = true;
-            } else if (id === 'bpm_upgrade_2' && updatedState.modules['bpm_upgrade_1'].acquiredCount > 0 && updatedState.beats >= 700) {
-              shouldUnlock = true;
-            } else if (id === 'bpm_upgrade_3' && updatedState.modules['bpm_upgrade_2'].acquiredCount > 0 && updatedState.beats >= 1500) {
+            } else if (id === 'nested_patterns' && updatedState.modules['polyphony'].acquiredCount > 0 && updatedState.beats >= 1000) {
               shouldUnlock = true;
             }
-            // TODO: Add more specific unlock conditions here
+            
+            // Phase 4: Melodic elements (1500-3000 beats)
+            else if (id === 'note_c' && updatedState.beats >= 1500) {
+              shouldUnlock = true;
+            } else if (id === 'octave_control' && updatedState.modules['note_c'].acquiredCount > 0 && updatedState.beats >= 1800) {
+              shouldUnlock = true;
+            } else if (id === 'note_scale' && updatedState.modules['octave_control'].acquiredCount > 0 && updatedState.beats >= 2200) {
+              shouldUnlock = true;
+            } else if (id === 'chord_triads' && updatedState.modules['note_scale'].acquiredCount > 0 && updatedState.beats >= 2800) {
+              shouldUnlock = true;
+            }
+            
+            // Phase 5: Sound shaping (3000-6000 beats)
+            else if (id === 'reverb_engine' && updatedState.beats >= 3000 && updatedState.modules['chord_triads'].acquiredCount > 0) {
+              shouldUnlock = true;
+            } else if (id === 'delay_unit' && updatedState.modules['reverb_engine'].acquiredCount > 0 && updatedState.beats >= 3500) {
+              shouldUnlock = true;
+            } else if (id === 'filter_bank' && updatedState.modules['delay_unit'].acquiredCount > 0 && updatedState.beats >= 4000) {
+              shouldUnlock = true;
+            }
+            
+            // Phase 6: Rhythm complexity (6000-10000 beats)
+            else if (id === 'euclidean_engine' && updatedState.beats >= 6000 && updatedState.modules['filter_bank'].acquiredCount > 0) {
+              shouldUnlock = true;
+            } else if (id === 'polyrhythm_generator' && updatedState.modules['euclidean_engine'].acquiredCount > 0 && updatedState.beats >= 8000) {
+              shouldUnlock = true;
+            }
+            
+            // Phase 7: Synthesis (10000-20000 beats)
+            else if (id === 'oscillator_bank' && updatedState.beats >= 10000 && updatedState.modules['polyrhythm_generator'].acquiredCount > 0) {
+              shouldUnlock = true;
+            } else if (id === 'wavetable_synth' && updatedState.modules['oscillator_bank'].acquiredCount > 0 && updatedState.beats >= 15000) {
+              shouldUnlock = true;
+            }
+            
+            // Phase 8: Live coding mastery (20000+ beats)
+            else if (id === 'ai_composer' && updatedState.beats >= 20000 && updatedState.modules['wavetable_synth'].acquiredCount > 0) {
+              shouldUnlock = true;
+            }
 
             if (shouldUnlock) {
               updatedState.modules[id] = { ...updatedState.modules[id], unlocked: true };

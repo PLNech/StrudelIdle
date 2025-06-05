@@ -38,8 +38,8 @@ test.describe('AlgoRave IDLE - Audio Functionality', () => {
     await page.goto('/');
     await page.waitForTimeout(2000);
 
-    // Should show the default Strudel code
-    const strudelCode = page.locator('text=d1 $ sound "bd"');
+    // Should show the default Strudel code in the Live Strudel Feed
+    const strudelCode = page.getByTestId('strudel-output').getByText('sound("bd")');
     await expect(strudelCode).toBeVisible();
   });
 
@@ -105,7 +105,7 @@ test.describe('AlgoRave IDLE - Audio Functionality', () => {
 
     // The Strudel code should still show the pattern
     // (It might be the same since it's already bd, but the system should be working)
-    const strudelCode = page.locator('text=d1 $ sound "bd"');
+    const strudelCode = page.getByTestId('strudel-output').getByText('sound("bd")');
     await expect(strudelCode).toBeVisible();
 
     // Check that the module was purchased (owned count should be > 0)

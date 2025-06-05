@@ -11,8 +11,11 @@ const StrudelOutput: React.FC = () => {
   return (
     <div className="bg-card text-card-foreground p-4 rounded-lg shadow-md mb-4 flex flex-col items-center">
       <h2 className="text-xl font-bold mb-2">Live Strudel Feed</h2>
-      <div className="w-full bg-primary/10 text-primary-foreground p-3 rounded-md font-mono text-sm overflow-auto max-h-40 mb-4">
-        <pre>{gameState.strudelCode || 'd1 $ sound "bd"'}</pre>
+      <div 
+        className="w-full bg-primary/10 text-primary-foreground p-3 rounded-md font-mono text-sm overflow-auto max-h-40 mb-4"
+        data-testid="strudel-output"
+      >
+        <pre>{gameState.strudelCode || 'sound("bd")'}</pre>
       </div>
       <Button
         onClick={togglePlay}

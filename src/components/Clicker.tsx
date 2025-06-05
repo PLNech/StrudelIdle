@@ -20,6 +20,7 @@ const Clicker: React.FC = () => {
       <Button
         onClick={handleClick}
         className="w-full py-4 text-lg font-semibold"
+        data-testid="clicker"
       >
         Play `bd` (1 Beat)
       </Button>

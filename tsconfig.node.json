@@ -7,7 +7,6 @@
     "allowImportingTsExtensions": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "isolatedModules": true,
-    "noEmit": true,
     "module": "ESNext",
     "types": ["node"]
   },

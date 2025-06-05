@@ -16,7 +16,11 @@ const NewsFeed: React.FC = () => {
   return (
     <div className="bg-card text-card-foreground p-3 rounded-lg shadow-md mb-4 h-24 overflow-hidden relative">
       <h2 className="text-lg font-bold mb-2">News Feed</h2>
-      <div ref={newsRef} className="absolute inset-0 top-10 overflow-y-auto px-3 pb-2 custom-scrollbar">
+      <div 
+        ref={newsRef} 
+        className="absolute inset-0 top-10 overflow-y-auto px-3 pb-2 custom-scrollbar"
+        data-testid="news-feed"
+      >
         {gameState.newsFeed.length === 0 ? (
           <p className="text-muted-foreground text-sm">No news yet...</p>
         ) : (

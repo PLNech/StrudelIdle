@@ -221,7 +221,7 @@ export const getModuleCost = (module: Module): number => {
 
 // Function to calculate a module's effective BPS, considering variants, etc.
 export const getModuleEffectiveBPS = (module: Module): number => {
-  let effectiveBPS = module.bpsPerUnit * module.acquiredCount;
+  const effectiveBPS = module.bpsPerUnit * module.acquiredCount;
   // TODO: Implement variant-specific BPS boosts (e.g., bd:2 is 1.5x bd:1)
   return effectiveBPS;
 };

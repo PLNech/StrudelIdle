@@ -17,8 +17,8 @@ test.describe('AlgoRave IDLE - Complete Game Experience', () => {
     expect(strudelInit).toBe(true);
 
     // 2. Verify initial state shows correct syntax
-    const strudelPattern = await page.locator('pre').textContent();
-    expect(strudelPattern).toContain('s("bd")');
+    const strudelPattern = await page.getByTestId('strudel-output').locator('pre').textContent();
+    expect(strudelPattern).toContain('sound("bd")');
 
     // 3. Test audio playback
     await page.locator('text=Start AlgoRave').click();
@@ -75,11 +75,25 @@ test.describe('AlgoRave IDLE - Complete Game Experience', () => {
     await page.goto('/');
     await page.waitForTimeout(2000);
 
-    // Check that additional modules are defined (even if locked)
+    // First buy the kick drum to start progression
+    const kickBuyButton = page.locator('text=Buy Kick Drum (bd)');
+    await kickBuyButton.click();
+    
+    // Click beats to generate enough to unlock next module  
+    const tapBeat = page.locator('text=Tap Beat');
+    for (let i = 0; i < 15; i++) {
+      await tapBeat.click();
+      await page.waitForTimeout(50);
+    }
+    
+    // Wait for unlock logic to process
+    await page.waitForTimeout(1000);
+
+    // Check that additional modules are now available
     const pageContent = await page.content();
     
-    // These modules should exist in the module shop even if not yet unlocked
-    const moduleNames = ['Snare (sn)', 'Hi-Hat (hh)', 'Clap (cp)', 'Arpeggio (arpy)', 'Bass (bass)'];
+    // These modules should now be unlocked and visible
+    const moduleNames = ['Hi-Hat (hh)', 'Kick Drum (bd)'];
     
     let foundModules = 0;
     for (const moduleName of moduleNames) {

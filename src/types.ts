@@ -88,7 +88,7 @@ export interface GameState {
 
 // Initial game state for a new game
 export const INITIAL_GAME_STATE: GameState = {
-  beats: 0,
+  beats: 15, // Start with enough beats to buy the first module
   bps: 0,
   modules: {},
   hardware: {
