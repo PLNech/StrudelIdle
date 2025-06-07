@@ -18,11 +18,11 @@ const StrudelOutput: React.FC = () => {
     let pattern = gameState.strudelCode;
     
     if (visualMode === 'punchcard') {
-      // Add punchcard visualization
-      pattern = `(${pattern}).punchcard()`;
+      // Add punchcard visualization with draw
+      pattern = `(${pattern}).punchcard().draw()`;
     } else if (visualMode === 'pianoroll') {
-      // Add pianoroll visualization  
-      pattern = `(${pattern}).pianoroll()`;
+      // Add pianoroll visualization with draw
+      pattern = `(${pattern}).pianoroll().draw()`;
     }
     
     return pattern;

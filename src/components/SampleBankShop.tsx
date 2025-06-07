@@ -8,7 +8,7 @@ const SampleBankShop: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const lastPlayTimeRef = useRef<number>(0);
 
-  const categories = ['all', 'drums', 'synth', 'fx', 'vocal', 'ambient', 'electronic', 'acoustic'];
+  const categories = ['all', 'drums', 'synth', 'fx', 'vocal', 'ambient', 'electronic', 'acoustic', 'breaks'];
 
   const filteredBanks = Object.values(SAMPLE_BANKS).filter(bank => 
     selectedCategory === 'all' || bank.category === selectedCategory
@@ -28,6 +28,7 @@ const SampleBankShop: React.FC = () => {
       ambient: '🌿',
       electronic: '⚡',
       acoustic: '🎸',
+      breaks: '💥',
       all: '🎵'
     };
     return icons[category as keyof typeof icons] || '🎵';
@@ -42,6 +43,7 @@ const SampleBankShop: React.FC = () => {
       ambient: 'bg-cyan-500/20 border-cyan-500/50 text-cyan-200',
       electronic: 'bg-yellow-500/20 border-yellow-500/50 text-yellow-200',
       acoustic: 'bg-orange-500/20 border-orange-500/50 text-orange-200',
+      breaks: 'bg-pink-500/20 border-pink-500/50 text-pink-200',
     };
     return colors[category as keyof typeof colors] || 'bg-muted/20 border-border text-muted-foreground';
   };

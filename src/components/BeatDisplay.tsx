@@ -3,7 +3,7 @@ import React from 'react';
 import { useGame } from '../context/GameContext';
 
 const BeatDisplay: React.FC = () => {
-  const { gameState } = useGame();
+  const { gameState, addBeats } = useGame();
 
   return (
     <div className="p-6">
@@ -21,6 +21,15 @@ const BeatDisplay: React.FC = () => {
             <div className="text-xs text-muted-foreground">Beats Per Second</div>
           </div>
         </div>
+        
+        {/* Debug Button */}
+        <button
+          onClick={() => addBeats(1000000000)}
+          className="text-xs px-2 py-1 bg-red-500/20 border border-red-500/50 rounded text-red-200 hover:bg-red-500/30 transition-colors"
+          title="Debug: Add 1 billion beats"
+        >
+          🐛 +1B
+        </button>
       </div>
     </div>
   );

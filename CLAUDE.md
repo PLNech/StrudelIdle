@@ -20,10 +20,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Lint code**: `npm run lint` (ESLint with strict TypeScript rules)
 - **Auto-fix lint issues**: `npm run lint:fix`
 - **Format code**: `npm run format` (Prettier)
+- **Run tests**: `npm test` (Playwright end-to-end tests)
+
+### Test-Driven Development (TDD)
+When implementing new features, follow wise and mature TDD practices:
+- Write tests first for new functionality, especially user-facing features
+- Use Playwright tests for integration and user interaction testing
+- Test files are located in `tests/` directory
+- Focus on behavior-driven testing rather than implementation details
+- Keep tests maintainable and avoid being stubborn about test-first when rapid prototyping
+- Ensure all tests pass before committing: `npm test`
+- Update existing tests when refactoring functionality
 
 ## Project Architecture
 
-This is **AlgoRave IDLE**, an incremental idle game where players generate "Beats" to unlock code modules and hardware upgrades, with real-time audio output via Strudel.cc.
+This is **StrudelIdle**, an incremental idle game where players generate "Beats" to unlock code modules and hardware upgrades, with real-time audio output via Strudel.cc.
 
 ### Core Architecture Pattern
 The game follows a **React Context + Hook pattern** with a central game loop:

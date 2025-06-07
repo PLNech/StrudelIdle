@@ -492,10 +492,17 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // --- State Modifiers ---
   const addBeats = useCallback((amount: number) => {
-    setGameState(prevState => ({
-      ...prevState,
-      beats: prevState.beats + amount,
-    }));
+    setGameState(prevState => {
+      // Calculate enhanced click reward based on unlocked samples
+      const totalUnlockedSamples = prevState.sampleBanks.totalSamplesUnlocked;
+      const log2Factor = totalUnlockedSamples > 1 ? Math.log2(totalUnlockedSamples) : 1;
+      const enhancedAmount = amount * totalUnlockedSamples * log2Factor;
+      
+      return {
+        ...prevState,
+        beats: prevState.beats + enhancedAmount,
+      };
+    });
   }, []);
 
   const purchaseModule = useCallback((moduleId: string) => {
@@ -721,10 +728,35 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [addNews]);
 
   const setActiveSample = useCallback((sample: string) => {
-    setGameState(prevState => ({
-      ...prevState,
-      strudelCode: `s("${sample}")`,
-    }));
+    setGameState(prevState => {
+      // If it's a Strudel pattern/syntax (contains parentheses), use as-is
+      if (sample.includes('(') && sample.includes(')')) {
+        return {
+          ...prevState,
+          strudelCode: sample,
+        };
+      }
+      
+      // Otherwise treat as sample name and replace existing samples
+      let newCode = prevState.strudelCode;
+      
+      // If current code contains bd, replace all bd with the new sample
+      if (newCode.includes('bd') && sample.includes(':')) {
+        const baseSample = sample.split(':')[0];
+        if (baseSample === 'bd') {
+          // Replace all bd occurrences with the new variant
+          newCode = newCode.replace(/bd(?::\d+)?/g, sample);
+        }
+      } else {
+        // Default to setting new pattern
+        newCode = `s("${sample}")`;
+      }
+      
+      return {
+        ...prevState,
+        strudelCode: newCode,
+      };
+    });
   }, []);
 
   const contextValue = useMemo(() => ({

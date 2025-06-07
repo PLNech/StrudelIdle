@@ -66,22 +66,32 @@ const stopStrudel = () => {
       console.log('Strudel.cc stopped via hush().');
     }
     
-    // Also try stopping the audio context if available
-    if ((window as any).getAudioContext) {
-      const ctx = (window as any).getAudioContext();
-      if (ctx && ctx.suspend) {
-        ctx.suspend().then(() => {
-          console.log('Audio context suspended.');
-          // Resume it immediately for next play
-          ctx.resume();
-        });
-      }
+    // Clear any active patterns more aggressively  
+    if ((window as any).evaluate) {
+      (window as any).evaluate('silence');
+      console.log('Set pattern to silence.');
     }
     
     // Try to stop any running patterns more aggressively
     if ((window as any).stop) {
       (window as any).stop();
       console.log('Strudel.cc stopped via stop().');
+    }
+    
+    // Stop the audio context more aggressively
+    if ((window as any).getAudioContext) {
+      const ctx = (window as any).getAudioContext();
+      if (ctx && ctx.state === 'running') {
+        ctx.suspend().then(() => {
+          console.log('Audio context suspended.');
+          // Resume after a short delay to allow proper stopping
+          setTimeout(() => {
+            if (ctx.state === 'suspended') {
+              ctx.resume();
+            }
+          }, 100);
+        });
+      }
     }
     
     if (!((window as any).hush || (window as any).stop)) {

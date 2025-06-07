@@ -5,7 +5,7 @@ export interface SampleBank {
   name: string;
   description: string;
   variantCount: number;
-  category: 'drums' | 'synth' | 'fx' | 'vocal' | 'ambient' | 'electronic' | 'acoustic';
+  category: 'drums' | 'synth' | 'fx' | 'vocal' | 'ambient' | 'electronic' | 'acoustic' | 'breaks';
   unlockCost: number;
   variants: SampleVariant[];
 }
@@ -17,7 +17,7 @@ export interface SampleVariant {
 }
 
 // Sample category classification based on folder names
-const categorizeSample = (foldername: string): SampleBank['category'] => {
+export const categorizeSample = (foldername: string): SampleBank['category'] => {
   const name = foldername.toLowerCase();
   
   if (name.includes('bd') || name.includes('kick') || name.includes('sd') || name.includes('snare') || 
@@ -46,8 +46,16 @@ const categorizeSample = (foldername: string): SampleBank['category'] => {
     return 'ambient';
   }
   
-  if (name.includes('electro') || name.includes('house') || name.includes('techno') || name.includes('trance') ||
-      name.includes('gabba') || name.includes('hardcore') || name.includes('jungle') || name.includes('breaks')) {
+  if (name.includes('breaks') || name.includes('break') || name.includes('amen') || name.includes('jungle')) {
+    return 'breaks';
+  }
+  
+  if (name.includes('techno')) {
+    return 'drums'; // Techno is a drum kit
+  }
+  
+  if (name.includes('electro') || name.includes('house') || name.includes('trance') ||
+      name.includes('gabba') || name.includes('hardcore')) {
     return 'electronic';
   }
   
@@ -56,7 +64,7 @@ const categorizeSample = (foldername: string): SampleBank['category'] => {
 };
 
 // Generate human-readable names from folder names
-const generateSampleName = (foldername: string): string => {
+export const generateSampleName = (foldername: string): string => {
   // Handle special cases first
   const specialNames: { [key: string]: string } = {
     'bd': 'Bass Drum',
@@ -98,7 +106,7 @@ const generateSampleName = (foldername: string): string => {
 };
 
 // Generate descriptions for sample banks
-const generateDescription = (name: string, category: SampleBank['category'], variantCount: number): string => {
+export const generateDescription = (category: SampleBank['category'], variantCount: number): string => {
   const baseDescriptions: { [key in SampleBank['category']]: string } = {
     drums: 'Percussive sounds for rhythm patterns',
     synth: 'Synthesized tones and electronic sounds',
@@ -106,7 +114,8 @@ const generateDescription = (name: string, category: SampleBank['category'], var
     vocal: 'Voice samples and vocal textures',
     ambient: 'Atmospheric and environmental sounds',
     electronic: 'Electronic music elements',
-    acoustic: 'Natural and acoustic instrument sounds'
+    acoustic: 'Natural and acoustic instrument sounds',
+    breaks: 'Breakbeat patterns and rhythmic loops'
   };
   
   const base = baseDescriptions[category];
@@ -116,7 +125,7 @@ const generateDescription = (name: string, category: SampleBank['category'], var
 };
 
 // Calculate unlock costs based on category and variants
-const calculateUnlockCost = (category: SampleBank['category'], variantCount: number): number => {
+export const calculateUnlockCost = (category: SampleBank['category'], variantCount: number): number => {
   const baseCosts: { [key in SampleBank['category']]: number } = {
     drums: 15,      // Drums are fundamental, cheaper
     synth: 30,      // Synths are more complex
@@ -124,7 +133,8 @@ const calculateUnlockCost = (category: SampleBank['category'], variantCount: num
     vocal: 40,      // Vocals are unique/special
     ambient: 20,    // Ambient sounds are atmospheric
     electronic: 35, // Electronic sounds are advanced
-    acoustic: 25    // Acoustic sounds are mid-tier
+    acoustic: 25,   // Acoustic sounds are mid-tier
+    breaks: 45      // Breaks are advanced rhythmic patterns
   };
   
   const base = baseCosts[category];
@@ -252,13 +262,13 @@ export const SAMPLE_BANKS: { [key: string]: SampleBank } = {
     }))
   },
   
-  // Breaks and Electronic
+  // Breaks
   'amencutup': {
     id: 'amencutup',
     name: 'Amen Break Cuts',
     description: 'Chopped up Amen Break samples • 32 variants',
     variantCount: 32,
-    category: 'electronic',
+    category: 'breaks',
     unlockCost: 150,
     variants: Array.from({length: 32}, (_, i) => ({
       index: i,
@@ -272,7 +282,7 @@ export const SAMPLE_BANKS: { [key: string]: SampleBank } = {
     name: 'Jungle Drums',
     description: 'Jungle/drum & bass elements • 13 variants',
     variantCount: 13,
-    category: 'electronic',
+    category: 'breaks',
     unlockCost: 100,
     variants: Array.from({length: 13}, (_, i) => ({
       index: i,

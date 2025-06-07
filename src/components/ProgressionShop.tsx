@@ -6,9 +6,10 @@ import { ALL_PHASES, ProgressionPhase, ProgressionFeature } from '../data/progre
 import SampleBankShop from './SampleBankShop';
 
 const ProgressionShop: React.FC = () => {
-  const { gameState, purchaseFeature, purchasePhase } = useGame();
+  const { gameState, purchaseFeature, purchasePhase, setActiveSample } = useGame();
   const [selectedPhase, setSelectedPhase] = useState<string>('first_sounds');
   const [activeTab, setActiveTab] = useState<'workshop' | 'samples'>('workshop');
+  const lastPlayTimeRef = React.useRef<number>(0);
 
   const getCurrentPhase = (): ProgressionPhase | undefined => {
     return ALL_PHASES.find(phase => phase.id === selectedPhase);
@@ -73,6 +74,16 @@ const ProgressionShop: React.FC = () => {
     }
   };
 
+  const handleSyntaxClick = (syntax: string) => {
+    const now = Date.now();
+    // Rate limit to maximum 1 sample play per 50ms (20Hz max)
+    if (now - lastPlayTimeRef.current < 50) {
+      return;
+    }
+    lastPlayTimeRef.current = now;
+    setActiveSample(syntax);
+  };
+
   const currentPhase = getCurrentPhase();
 
   return (
@@ -106,30 +117,36 @@ const ProgressionShop: React.FC = () => {
         </button>
       </div>
 
-      {activeTab === 'workshop' ? (
+      {activeTab === 'workshop' && (
         <div>
           {/* Phase Tabs */}
           <div className="flex flex-wrap gap-2 mb-6">
-        {ALL_PHASES.map((phase) => (
-          <button
-            key={phase.id}
-            onClick={() => setSelectedPhase(phase.id)}
-            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-              selectedPhase === phase.id
-                ? 'bg-primary text-primary-foreground'
-                : isPhaseUnlocked(phase.id)
-                ? 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
-                : 'bg-muted text-muted-foreground opacity-50 cursor-not-allowed'
-            }`}
-            disabled={!isPhaseUnlocked(phase.id) && selectedPhase !== phase.id}
-          >
-            {phase.name}
-            {!isPhaseUnlocked(phase.id) && (
-              <span className="ml-1 text-xs">🔒</span>
-            )}
-          </button>
-        ))}
-      </div>
+            {ALL_PHASES.map((phase) => (
+              <button
+                key={phase.id}
+                onClick={() => setSelectedPhase(phase.id)}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  selectedPhase === phase.id
+                    ? 'bg-primary text-primary-foreground'
+                    : isPhaseUnlocked(phase.id)
+                    ? 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
+                    : 'bg-muted text-muted-foreground opacity-50 cursor-not-allowed'
+                }`}
+                disabled={!isPhaseUnlocked(phase.id) && selectedPhase !== phase.id}
+              >
+                {phase.name}
+                {!isPhaseUnlocked(phase.id) && (
+                  <span className="ml-1 text-xs">🔒</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      
+      {activeTab === 'samples' && (
+        <SampleBankShop />
+      )}
 
       {currentPhase && (
         <div className="space-y-4">
@@ -182,9 +199,18 @@ const ProgressionShop: React.FC = () => {
                         {feature.description}
                       </p>
                       
-                      <div className="bg-background/30 rounded px-3 py-2 font-mono text-xs">
+                      <button
+                        onClick={() => isFeatureUnlocked(feature.id) && handleSyntaxClick(feature.strudelSyntax)}
+                        disabled={!isFeatureUnlocked(feature.id)}
+                        className={`bg-background/30 rounded px-3 py-2 font-mono text-xs w-full text-left transition-colors ${
+                          isFeatureUnlocked(feature.id) 
+                            ? 'hover:bg-background/50 cursor-pointer' 
+                            : 'cursor-not-allowed opacity-50'
+                        }`}
+                        title={isFeatureUnlocked(feature.id) ? 'Click to set as current pattern' : 'Unlock this feature first'}
+                      >
                         {feature.strudelSyntax}
-                      </div>
+                      </button>
                       
                       {feature.example && (
                         <div className="mt-2 text-xs text-muted-foreground">
@@ -217,13 +243,12 @@ const ProgressionShop: React.FC = () => {
             <div className="text-center py-8 text-muted-foreground">
               <p>🔒 Unlock this phase to see available features</p>
             </div>
-          )}
+          )} 
+
         </div>
-      ) : (
-        <SampleBankShop />
       )}
-    </div>
-  );
+  </div>
+  )
 };
 
 export default ProgressionShop;

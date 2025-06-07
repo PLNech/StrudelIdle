@@ -109,6 +109,8 @@ const GameContent: React.FC = () => {
               >
                 📖📀 Strudel Docs
               </a>
+              <span className="text-border">•</span>
+              <span>Made by <a href="https://me.nech.pl" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">PLN</a></span>
             </div>
           </div>
         </div>
