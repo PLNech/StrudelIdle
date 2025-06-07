@@ -12,11 +12,13 @@ import NewsFeed from './components/NewsFeed';
 import StrudelOutput from './components/StrudelOutput';
 import AchievementsDisplay from './components/AchievementsDisplay';
 import Settings from './components/Settings';
+import SaveLoadMenu from './components/SaveLoadMenu';
 import AchievementNotification from './components/AchievementNotification';
 import PatternBuilder from './components/PatternBuilder';
 import CurrentPattern from './components/CurrentPattern';
 import BPMUpgrades from './components/BPMUpgrades';
 import StickyHeader from './components/StickyHeader';
+import SoundLines from './components/SoundLines';
 import { useGame } from './context/GameContext';
 import { useAchievementNotifications } from './hooks/useAchievementNotifications';
 
@@ -92,6 +94,9 @@ const GameContent: React.FC = () => {
               <ProgressionShop />
             </div>
             <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+              <SoundLines />
+            </div>
+            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
               <CodeOMatic />
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-1 gap-4">
@@ -151,6 +156,7 @@ const GameContent: React.FC = () => {
       </footer>
       
       {/* Modals & Overlays */}
+      <SaveLoadMenu />
       <Settings />
       
       {/* Achievement Notifications */}

@@ -5,7 +5,7 @@ import { useStrudelEngine } from '../hooks/useStrudelEngine';
 import { Button } from './ui/button';
 
 const StrudelOutput: React.FC = () => {
-  const { gameState, resetPatternState } = useGame();
+  const { gameState } = useGame();
   const { togglePlay, isPlaying, strudelReady } = useStrudelEngine(gameState.strudelCode, gameState.strudelBPM);
   const [showDebug, setShowDebug] = useState(false);
   const [visualMode, setVisualMode] = useState<'code' | 'punchcard' | 'pianoroll'>('code');
@@ -69,14 +69,6 @@ const StrudelOutput: React.FC = () => {
             onClick={() => setShowDebug(!showDebug)}
           >
             {showDebug ? 'Hide Debug' : 'Debug'}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={resetPatternState}
-            className="text-orange-600 border-orange-600 hover:bg-orange-600 hover:text-white"
-          >
-            🔄 Reset
           </Button>
           {/* Only show visualization controls if unlocked */}
           {(gameState.unlockedFeatures.includes('visualization') || gameState.beats > 2000) && (

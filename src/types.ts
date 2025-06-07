@@ -88,6 +88,22 @@ export interface GameState {
   loadedSampleVariants: { [bankId: string]: number }; // Currently loaded variant per sample bank (e.g., {bd: 1, sn: 3})
   enabledSamples: { [bankId: string]: boolean }; // Which samples are enabled for pattern generation (e.g., {bd: true, sn: false})
   manualPatternOverride: string | null; // User-set pattern that overrides auto-generation
+  // Multi-line sound system
+  soundLines: {
+    line1: { enabled: boolean; type: 'drums' | 'melodic'; selectedSample?: string; }; // Main drums line
+    line2: { enabled: boolean; type: 'drums' | 'melodic'; selectedSample?: string; }; // Second line (melodic)
+    line3: { enabled: boolean; type: 'drums' | 'melodic'; selectedSample?: string; }; // Third line
+    line4: { enabled: boolean; type: 'drums' | 'melodic'; selectedSample?: string; }; // Fourth line
+  };
+  // Musical progression system
+  unlockedMelodicSamples: string[]; // Available melodic samples (casio, jazz, etc.)
+  musicalFeatures: {
+    notes: boolean;
+    chords: boolean;
+    progressions: boolean;
+    circleOfFifths: boolean;
+    jazzSequences: boolean;
+  };
   // New progression system
   unlockedPhases: string[];
   unlockedFeatures: string[];
@@ -111,6 +127,12 @@ export interface GameState {
     unlockedBPMs: number[]; // Available discrete BPM values
     hasSlider: boolean; // Whether fine slider control is unlocked
     sliderCost: number; // Cost for slider upgrade
+  };
+  // Save system
+  saveSettings: {
+    autoSave: boolean; // Whether auto-save is enabled
+    autoSaveInterval: number; // Auto-save interval in minutes
+    lastAutoSave: number; // Timestamp of last auto-save
   };
 }
 
@@ -140,6 +162,22 @@ export const INITIAL_GAME_STATE: GameState = {
   loadedSampleVariants: { bd: 0 }, // Initially bd:0 is loaded
   enabledSamples: { bd: true }, // Initially only bd is enabled
   manualPatternOverride: null, // No manual override initially
+  // Multi-line sound system
+  soundLines: {
+    line1: { enabled: true, type: 'drums', selectedSample: 'bd' }, // Main drums line always enabled
+    line2: { enabled: false, type: 'melodic' }, // Second line locked initially
+    line3: { enabled: false, type: 'melodic' }, // Third line locked initially
+    line4: { enabled: false, type: 'melodic' }, // Fourth line locked initially
+  },
+  // Musical progression system
+  unlockedMelodicSamples: [], // No melodic samples initially
+  musicalFeatures: {
+    notes: false,
+    chords: false,
+    progressions: false,
+    circleOfFifths: false,
+    jazzSequences: false,
+  },
   // New progression system
   unlockedPhases: ['first_sounds'], // First phase always unlocked
   unlockedFeatures: ['basic_drums'], // Basic drums always available
@@ -164,5 +202,11 @@ export const INITIAL_GAME_STATE: GameState = {
     unlockedBPMs: [60], // Start with only 60 BPM
     hasSlider: false, // No slider control initially
     sliderCost: 2000 // Expensive slider upgrade
+  },
+  // Save system
+  saveSettings: {
+    autoSave: true, // Auto-save enabled by default
+    autoSaveInterval: 1, // Auto-save every minute
+    lastAutoSave: Date.now(), // Initialize with current time
   },
 };

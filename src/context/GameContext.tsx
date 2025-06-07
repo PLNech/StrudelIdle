@@ -36,6 +36,11 @@ interface GameContextType {
   purchaseSampleVariant: (bankId: string, variantIndex: number) => void;
   setActiveSample: (sample: string) => void;
   toggleSampleEnabled: (bankId: string) => void;
+  // Multi-line sound system
+  unlockSoundLine: (lineNumber: 2 | 3 | 4) => void;
+  setSoundLineSample: (lineKey: 'line1' | 'line2' | 'line3' | 'line4', sample: string) => void;
+  unlockMelodicSample: (sample: string) => void;
+  unlockMusicalFeature: (feature: 'notes' | 'chords' | 'progressions' | 'circleOfFifths' | 'jazzSequences') => void;
   // BPM upgrades
   purchaseBPMUpgrade: (bpm: number) => void;
   purchaseBPMSlider: () => void;
@@ -922,6 +927,104 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, []);
 
+  // Multi-line sound system functions
+  const unlockSoundLine = useCallback((lineNumber: 2 | 3 | 4) => {
+    const costs = { 2: 500, 3: 1500, 4: 3000 };
+    const cost = costs[lineNumber];
+    
+    setGameState(prevState => {
+      if (prevState.beats >= cost) {
+        const lineKey = `line${lineNumber}` as 'line2' | 'line3' | 'line4';
+        addNews(`🎼 Sound Line ${lineNumber} unlocked! Add melodic elements to your track.`);
+        return {
+          ...prevState,
+          beats: prevState.beats - cost,
+          soundLines: {
+            ...prevState.soundLines,
+            [lineKey]: {
+              ...prevState.soundLines[lineKey],
+              enabled: true,
+            },
+          },
+        };
+      }
+      return prevState;
+    });
+  }, [addNews]);
+
+  const setSoundLineSample = useCallback((lineKey: 'line1' | 'line2' | 'line3' | 'line4', sample: string) => {
+    setGameState(prevState => ({
+      ...prevState,
+      soundLines: {
+        ...prevState.soundLines,
+        [lineKey]: {
+          ...prevState.soundLines[lineKey],
+          selectedSample: sample,
+        },
+      },
+    }));
+  }, []);
+
+  const unlockMelodicSample = useCallback((sample: string) => {
+    const costs: { [key: string]: number } = {
+      casio: 200,
+      jazz: 400,
+      piano: 600,
+      rhodes: 800,
+      strings: 1000,
+      brass: 1200,
+    };
+    
+    const cost = costs[sample] || 500;
+    
+    setGameState(prevState => {
+      if (prevState.beats >= cost && !prevState.unlockedMelodicSamples.includes(sample)) {
+        addNews(`🎹 Melodic sample unlocked: ${sample.charAt(0).toUpperCase() + sample.slice(1)}!`);
+        return {
+          ...prevState,
+          beats: prevState.beats - cost,
+          unlockedMelodicSamples: [...prevState.unlockedMelodicSamples, sample],
+        };
+      }
+      return prevState;
+    });
+  }, [addNews]);
+
+  const unlockMusicalFeature = useCallback((feature: 'notes' | 'chords' | 'progressions' | 'circleOfFifths' | 'jazzSequences') => {
+    const costs = {
+      notes: 300,
+      chords: 800,
+      progressions: 2000,
+      circleOfFifths: 5000,
+      jazzSequences: 10000,
+    };
+    
+    const cost = costs[feature];
+    
+    setGameState(prevState => {
+      if (prevState.beats >= cost && !prevState.musicalFeatures[feature]) {
+        const featureNames = {
+          notes: 'Musical Notes',
+          chords: 'Chord Theory',
+          progressions: 'Chord Progressions',
+          circleOfFifths: 'Circle of Fifths',
+          jazzSequences: 'Jazz Sequences',
+        };
+        
+        addNews(`🎼 Musical feature unlocked: ${featureNames[feature]}!`);
+        return {
+          ...prevState,
+          beats: prevState.beats - cost,
+          musicalFeatures: {
+            ...prevState.musicalFeatures,
+            [feature]: true,
+          },
+        };
+      }
+      return prevState;
+    });
+  }, [addNews]);
+
   const contextValue = useMemo(() => ({
     gameState,
     setGameState,
@@ -941,13 +1044,18 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     purchaseSampleVariant,
     setActiveSample,
     toggleSampleEnabled,
+    // Multi-line sound system
+    unlockSoundLine,
+    setSoundLineSample,
+    unlockMelodicSample,
+    unlockMusicalFeature,
     // BPM upgrades
     purchaseBPMUpgrade,
     purchaseBPMSlider,
     setBPM,
     // Debug functions
     resetPatternState,
-  }), [gameState, setGameState, addBeats, purchaseModule, purchaseHardware, addNews, purchasePhase, purchaseFeature, purchaseCodeOMatic, toggleCodeOMatic, setCodeOMaticComplexity, purchaseSampleBank, purchaseSampleVariant, setActiveSample, toggleSampleEnabled, purchaseBPMUpgrade, purchaseBPMSlider, setBPM, resetPatternState]);
+  }), [gameState, setGameState, addBeats, purchaseModule, purchaseHardware, addNews, purchasePhase, purchaseFeature, purchaseCodeOMatic, toggleCodeOMatic, setCodeOMaticComplexity, purchaseSampleBank, purchaseSampleVariant, setActiveSample, toggleSampleEnabled, unlockSoundLine, setSoundLineSample, unlockMelodicSample, unlockMusicalFeature, purchaseBPMUpgrade, purchaseBPMSlider, setBPM, resetPatternState]);
 
   return (
     <GameContext.Provider value={contextValue}>
