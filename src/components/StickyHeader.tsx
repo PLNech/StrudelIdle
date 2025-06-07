@@ -1,6 +1,7 @@
 // src/components/StickyHeader.tsx
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
+import EnabledSamplesDisplay from './EnabledSamplesDisplay';
 
 const StickyHeader: React.FC = () => {
   const { gameState } = useGame();
@@ -48,7 +49,7 @@ const StickyHeader: React.FC = () => {
           }`}>
             {showPattern && (
               <div className="bg-primary/10 rounded-lg px-4 py-2 border border-primary/20">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 mb-2">
                   <span className="text-xs text-muted-foreground font-medium">Current Pattern:</span>
                   <div className="font-mono text-sm text-primary bg-background/50 px-2 py-1 rounded truncate max-w-md">
                     {gameState.strudelCode || 's("bd")'}
@@ -57,6 +58,7 @@ const StickyHeader: React.FC = () => {
                     {gameState.strudelBPM} BPM
                   </span>
                 </div>
+                <EnabledSamplesDisplay />
               </div>
             )}
           </div>

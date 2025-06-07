@@ -35,10 +35,13 @@ interface GameContextType {
   purchaseSampleBank: (bankId: string) => void;
   purchaseSampleVariant: (bankId: string, variantIndex: number) => void;
   setActiveSample: (sample: string) => void;
+  toggleSampleEnabled: (bankId: string) => void;
   // BPM upgrades
   purchaseBPMUpgrade: (bpm: number) => void;
   purchaseBPMSlider: () => void;
   setBPM: (bpm: number) => void;
+  // Debug functions
+  resetPatternState: () => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -320,7 +323,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let finalStrudelCode = currentStrudelCode;
         let updatedCodeOMatic = prevState.codeOMatic;
         
-        if (prevState.codeOMatic?.purchased && prevState.codeOMatic?.enabled) {
+        // Use manual pattern override if set, otherwise use generated code
+        if (prevState.manualPatternOverride) {
+          finalStrudelCode = prevState.manualPatternOverride;
+        } else if (prevState.codeOMatic?.purchased && prevState.codeOMatic?.enabled) {
           const now = Date.now();
           const timeSinceLastGeneration = (now - prevState.codeOMatic.lastGeneration) / 1000;
           const isPaused = prevState.codeOMatic.pausedUntil && now < prevState.codeOMatic.pausedUntil;
@@ -761,47 +767,56 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const setActiveSample = useCallback((sample: string) => {
     console.log('🎵 setActiveSample called with:', sample);
     setGameState(prevState => {
-      console.log('🎵 Current code before change:', prevState.strudelCode);
+      console.log('🎵 Current loaded variants before change:', prevState.loadedSampleVariants);
+      console.log('🎵 Current manual override:', prevState.manualPatternOverride);
       
       // If it's a Strudel pattern/syntax (contains parentheses), use as-is
       if (sample.includes('(') && sample.includes(')')) {
         console.log('🎵 Setting full pattern:', sample);
         return {
           ...prevState,
-          strudelCode: sample,
+          manualPatternOverride: sample,
+          // Pause Code-o-matic for 30 seconds to prevent overriding manual selections
+          codeOMatic: {
+            ...prevState.codeOMatic,
+            pausedUntil: Date.now() + 30000, // 30 seconds pause
+          },
         };
       }
       
-      // Otherwise treat as sample name and replace existing samples
-      let newCode = prevState.strudelCode;
+      // Extract base sample name and variant
+      const [baseSample, variantStr] = sample.includes(':') ? sample.split(':') : [sample, '0'];
+      const variant = parseInt(variantStr, 10);
       
-      // Extract base sample name (before :)
-      const baseSample = sample.includes(':') ? sample.split(':')[0] : sample;
-      console.log('🎵 Base sample:', baseSample, 'Full sample:', sample);
+      console.log('🎵 Base sample:', baseSample, 'Variant:', variant);
       
-      // If current code contains the base sample, replace all variants with the new one
-      if (newCode.includes(baseSample)) {
-        // Replace all occurrences of baseSample (with or without variants)
-        const regex = new RegExp(`${baseSample}(?::\\d+)?`, 'g');
-        newCode = newCode.replace(regex, sample);
-        console.log('🎵 Replaced in existing code. New code:', newCode);
-      } else {
-        // Default to setting new pattern
-        newCode = `s("${sample}")`;
-        console.log('🎵 Set new pattern:', newCode);
-      }
+      // Update the loaded sample variant for this bank
+      const newLoadedVariants = {
+        ...prevState.loadedSampleVariants,
+        [baseSample]: variant,
+      };
+      
+      // Create a simple pattern using the selected sample
+      const newPattern = `s("${sample}")`;
+      
+      console.log('🎵 Updated loaded variants:', newLoadedVariants);
+      console.log('🎵 Setting manual pattern to:', newPattern);
       
       const result = {
         ...prevState,
-        strudelCode: newCode,
-        // Pause Code-o-matic for 10 seconds to prevent overriding manual selections
+        loadedSampleVariants: newLoadedVariants,
+        manualPatternOverride: newPattern,
+        // Pause Code-o-matic for 30 seconds to prevent overriding manual selections
         codeOMatic: {
           ...prevState.codeOMatic,
-          pausedUntil: Date.now() + 10000, // 10 seconds pause
+          enabled: false, // Temporarily disable to prevent interference
+          pausedUntil: Date.now() + 30000, // 30 seconds pause
         },
       };
       
-      console.log('🎵 Final result code:', result.strudelCode);
+      console.log('🎵 Final result - loaded variants:', result.loadedSampleVariants);
+      console.log('🎵 Final result - manual override:', result.manualPatternOverride);
+      console.log('🎵 Code-o-matic disabled and paused for debugging');
       return result;
     });
   }, []);
@@ -862,6 +877,51 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, []);
 
+  const resetPatternState = useCallback(() => {
+    console.log('🔄 Resetting entire game state except achievements');
+    setGameState(prevState => ({
+      ...INITIAL_GAME_STATE,
+      // Keep achievements
+      achievements: prevState.achievements,
+      // Reset modules to initial state
+      modules: (() => {
+        const resetModules: { [id: string]: Module } = {};
+        for (const id in STRUDEL_MODULES) {
+          resetModules[id] = { ...STRUDEL_MODULES[id] };
+        }
+        // Explicitly unlock the first basic drum module
+        if (resetModules['bd_basic']) {
+          resetModules['bd_basic'] = { ...resetModules['bd_basic'], unlocked: true };
+        }
+        return resetModules;
+      })(),
+      // Reset hardware to initial state
+      hardware: {
+        ...INITIAL_GAME_STATE.hardware,
+        ram: { ...INITIAL_GAME_STATE.hardware.ram, total: ALL_HARDWARE['ram_stick_1gb']?.capacity || 0 },
+        cpu: { ...INITIAL_GAME_STATE.hardware.cpu, total: ALL_HARDWARE['cpu_core_1']?.capacity || 0 },
+      },
+    }));
+    addNews('🔄 Game reset! Starting fresh journey with achievements intact.');
+  }, [addNews]);
+
+  const toggleSampleEnabled = useCallback((bankId: string) => {
+    setGameState(prevState => {
+      const newEnabledSamples = {
+        ...prevState.enabledSamples,
+        [bankId]: !prevState.enabledSamples[bankId],
+      };
+      
+      console.log('🎵 Toggling sample enabled state:', bankId, '→', !prevState.enabledSamples[bankId]);
+      console.log('🎵 New enabled samples:', newEnabledSamples);
+      
+      return {
+        ...prevState,
+        enabledSamples: newEnabledSamples,
+      };
+    });
+  }, []);
+
   const contextValue = useMemo(() => ({
     gameState,
     setGameState,
@@ -880,11 +940,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     purchaseSampleBank,
     purchaseSampleVariant,
     setActiveSample,
+    toggleSampleEnabled,
     // BPM upgrades
     purchaseBPMUpgrade,
     purchaseBPMSlider,
     setBPM,
-  }), [gameState, setGameState, addBeats, purchaseModule, purchaseHardware, addNews, purchasePhase, purchaseFeature, purchaseCodeOMatic, toggleCodeOMatic, setCodeOMaticComplexity, purchaseSampleBank, purchaseSampleVariant, setActiveSample, purchaseBPMUpgrade, purchaseBPMSlider, setBPM]);
+    // Debug functions
+    resetPatternState,
+  }), [gameState, setGameState, addBeats, purchaseModule, purchaseHardware, addNews, purchasePhase, purchaseFeature, purchaseCodeOMatic, toggleCodeOMatic, setCodeOMaticComplexity, purchaseSampleBank, purchaseSampleVariant, setActiveSample, toggleSampleEnabled, purchaseBPMUpgrade, purchaseBPMSlider, setBPM, resetPatternState]);
 
   return (
     <GameContext.Provider value={contextValue}>

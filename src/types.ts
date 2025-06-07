@@ -84,6 +84,10 @@ export interface GameState {
   strudelCode: string; // The current Strudel.cc code being played
   strudelBPM: number; // The current BPM for Strudel.cc (visible to user)
   hasLooping: boolean; // Whether looping is enabled
+  // Sample state management
+  loadedSampleVariants: { [bankId: string]: number }; // Currently loaded variant per sample bank (e.g., {bd: 1, sn: 3})
+  enabledSamples: { [bankId: string]: boolean }; // Which samples are enabled for pattern generation (e.g., {bd: true, sn: false})
+  manualPatternOverride: string | null; // User-set pattern that overrides auto-generation
   // New progression system
   unlockedPhases: string[];
   unlockedFeatures: string[];
@@ -132,6 +136,10 @@ export const INITIAL_GAME_STATE: GameState = {
   strudelCode: 's("bd")', // Initial sound
   strudelBPM: 60, // Very slow at first
   hasLooping: false, // No looping initially
+  // Sample state management
+  loadedSampleVariants: { bd: 0 }, // Initially bd:0 is loaded
+  enabledSamples: { bd: true }, // Initially only bd is enabled
+  manualPatternOverride: null, // No manual override initially
   // New progression system
   unlockedPhases: ['first_sounds'], // First phase always unlocked
   unlockedFeatures: ['basic_drums'], // Basic drums always available

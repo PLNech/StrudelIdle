@@ -112,3 +112,27 @@ Modules are defined in `src/data/modules.ts` with:
 - Defined in `src/data/achievements.ts` with condition functions
 - Checked every game loop iteration against current `GameState`
 - Automatically unlock and trigger news feed updates
+
+## Responsive Design Guidelines
+
+### Layout Philosophy
+- **Desktop (lg+)**: Horizontal layout maximizing screen real estate with 3-column grid
+- **Tablet (md)**: Flexible 2-column layout with key controls prominent
+- **Mobile (sm)**: Vertical stack optimized for touch interaction
+
+### Grid Breakpoints
+- `xl:grid-cols-12` - Large desktop: 4-5-3 column distribution
+- `lg:grid-cols-8` - Desktop: 3-3-2 column distribution  
+- `md:grid-cols-6` - Tablet: 3-3 column distribution
+- `sm:grid-cols-1` - Mobile: Single column stack
+
+### Component Responsiveness
+- **CurrentPattern**: Full width on mobile, constrained on desktop
+- **Controls**: Side-by-side on desktop, stacked on mobile
+- **Shops**: Horizontal cards on desktop, vertical on mobile
+- **Navigation**: Tabs on desktop, dropdown on mobile
+
+### Touch Targets
+- Minimum 44px touch targets for mobile
+- Generous spacing between interactive elements
+- Clear visual feedback for all interactions

@@ -2,6 +2,7 @@
 import React from 'react';
 import { useGame } from '../context/GameContext';
 import { Button } from './ui/button';
+import BPMVisualization from './BPMVisualization';
 
 const BPMUpgrades: React.FC = () => {
   const { gameState, purchaseBPMUpgrade, purchaseBPMSlider, setBPM } = useGame();
@@ -21,6 +22,11 @@ const BPMUpgrades: React.FC = () => {
         <span className="text-2xl">🎛️</span>
         BPM Control
       </h2>
+
+      {/* BPM Visualization */}
+      <div className="mb-4">
+        <BPMVisualization />
+      </div>
 
       {/* Current BPM Display */}
       <div className="mb-4">

@@ -5,7 +5,7 @@ import { useStrudelEngine } from '../hooks/useStrudelEngine';
 import { Button } from './ui/button';
 
 const StrudelOutput: React.FC = () => {
-  const { gameState } = useGame();
+  const { gameState, resetPatternState } = useGame();
   const { togglePlay, isPlaying, strudelReady } = useStrudelEngine(gameState.strudelCode, gameState.strudelBPM);
   const [showDebug, setShowDebug] = useState(false);
   const [visualMode, setVisualMode] = useState<'code' | 'punchcard' | 'pianoroll'>('code');
@@ -70,6 +70,14 @@ const StrudelOutput: React.FC = () => {
           >
             {showDebug ? 'Hide Debug' : 'Debug'}
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={resetPatternState}
+            className="text-orange-600 border-orange-600 hover:bg-orange-600 hover:text-white"
+          >
+            🔄 Reset
+          </Button>
           {/* Only show visualization controls if unlocked */}
           {(gameState.unlockedFeatures.includes('visualization') || gameState.beats > 2000) && (
             <select 
@@ -120,6 +128,28 @@ const StrudelOutput: React.FC = () => {
             <pre className="text-xs mt-1 bg-background/50 p-2 rounded">
               {gameState.strudelCode || 'sound("bd")'}
             </pre>
+          </div>
+          <div className="mt-1">
+            <strong>Manual Override:</strong>
+            <pre className="text-xs mt-1 bg-background/50 p-2 rounded">
+              {gameState.manualPatternOverride || 'None'}
+            </pre>
+          </div>
+          <div className="mt-1">
+            <strong>Loaded Variants:</strong>
+            <pre className="text-xs mt-1 bg-background/50 p-2 rounded">
+              {JSON.stringify(gameState.loadedSampleVariants, null, 2)}
+            </pre>
+          </div>
+          <div className="mt-1">
+            <strong>Code-o-matic:</strong>
+            <div className="text-xs mt-1 bg-background/50 p-2 rounded">
+              <div>Enabled: {gameState.codeOMatic?.enabled ? 'Yes' : 'No'}</div>
+              <div>Paused: {gameState.codeOMatic?.pausedUntil && Date.now() < gameState.codeOMatic.pausedUntil ? 'Yes' : 'No'}</div>
+              {gameState.codeOMatic?.pausedUntil && Date.now() < gameState.codeOMatic.pausedUntil && (
+                <div>Pause ends: {Math.ceil((gameState.codeOMatic.pausedUntil - Date.now()) / 1000)}s</div>
+              )}
+            </div>
           </div>
         </div>
       )}

@@ -57,49 +57,67 @@ const GameContent: React.FC = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 w-full max-w-[1400px] mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-12 gap-4 lg:gap-6 w-full max-w-[1400px] mx-auto">
           {/* Left Sidebar - Controls & Audio */}
-          <div className="xl:col-span-4 flex flex-col space-y-6">
-            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
-              <Clicker />
+          <div className="md:col-span-3 lg:col-span-3 xl:col-span-4 flex flex-col space-y-4 lg:space-y-6">
+            {/* Essential Controls - Always Visible */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4">
+              <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+                <Clicker />
+              </div>
+              <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+                <BeatDisplay />
+              </div>
             </div>
-            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
-              <BeatDisplay />
-            </div>
+            
+            {/* Audio Controls */}
             <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
               <StrudelOutput />
             </div>
-            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
-              <BPMUpgrades />
-            </div>
-            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
-              <PatternBuilder />
+            
+            {/* BPM & Pattern Controls */}
+            <div className="grid grid-cols-1 lg:grid-cols-1 gap-4">
+              <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+                <BPMUpgrades />
+              </div>
+              <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm lg:hidden xl:block">
+                <PatternBuilder />
+              </div>
             </div>
           </div>
 
           {/* Center - Main Shops */}
-          <div className="xl:col-span-5 flex flex-col space-y-6">
+          <div className="md:col-span-3 lg:col-span-3 xl:col-span-5 flex flex-col space-y-4 lg:space-y-6">
             <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
               <ProgressionShop />
             </div>
             <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
               <CodeOMatic />
             </div>
-            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
-              <HardwareShop />
-            </div>
-            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
-              <ModuleShop />
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-1 gap-4">
+              <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+                <HardwareShop />
+              </div>
+              <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+                <ModuleShop />
+              </div>
             </div>
           </div>
 
           {/* Right Sidebar - Progress & Info */}
-          <div className="xl:col-span-3 flex flex-col space-y-6">
-            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
-              <NewsFeed />
+          <div className="md:col-span-6 lg:col-span-2 xl:col-span-3 flex flex-col space-y-4 lg:space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
+              <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+                <NewsFeed />
+              </div>
+              <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+                <AchievementsDisplay />
+              </div>
             </div>
-            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
-              <AchievementsDisplay />
+            
+            {/* Pattern Builder - Hidden on small screens, visible on large */}
+            <div className="hidden lg:block xl:hidden bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+              <PatternBuilder />
             </div>
           </div>
         </div>
