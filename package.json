@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://[YOUR_GITHUB_USERNAME].github.io/StrudelIdle",
+  "homepage": "https://plnech.github.io/StrudelIdle",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

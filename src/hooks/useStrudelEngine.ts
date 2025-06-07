@@ -10,9 +10,20 @@ const initStrudelEngine = async () => {
   
   try {
     console.log('Initializing Strudel.cc...');
-    // Initialize Strudel with optional sample preloading
+    // Initialize Strudel with Dirt-Samples from GitHub
     await initStrudel({
-      prebake: () => (window as any).samples?.('github:tidalcycles/dirt-samples') || Promise.resolve(),
+      prebake: async () => {
+        try {
+          // Load samples from GitHub repository
+          if ((window as any).samples) {
+            console.log('Loading Dirt-Samples from GitHub...');
+            await (window as any).samples('github:tidalcycles/dirt-samples');
+            console.log('Dirt-Samples loaded successfully!');
+          }
+        } catch (sampleError) {
+          console.warn('Could not load Dirt-Samples, using built-in samples:', sampleError);
+        }
+      },
     });
     strudelInitialized = true;
     console.log('Strudel.cc initialized successfully!');
@@ -22,7 +33,7 @@ const initStrudelEngine = async () => {
     try {
       await initStrudel();
       strudelInitialized = true;
-      console.log('Strudel.cc initialized without samples');
+      console.log('Strudel.cc initialized with built-in samples only');
     } catch (fallbackError) {
       console.error('Failed to initialize Strudel.cc:', fallbackError);
     }
