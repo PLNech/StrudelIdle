@@ -193,15 +193,11 @@ s("<bd [hh hh]> sd hh").stack(note("c3 e3 g3").s("sawtooth"))
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our contributing guidelines for:
-- Code style and standards
-- Testing requirements
-- Issue reporting
-- Feature requests
+We welcome contributions!
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the GPL v3 License - see the LICENSE file for details.
 
 ## 🙏 Acknowledgments
 
