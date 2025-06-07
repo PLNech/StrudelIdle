@@ -1,7 +1,7 @@
 // src/utils/ast.ts
 // AST manipulation utilities for Strudel patterns
 
-import { ASTNode, ASTNodeType, PatternBuilder, PatternMutation, PatternMetrics, CodeGenerationContext } from '../types/ast';
+import { ASTNode, PatternBuilder, PatternMutation, PatternMetrics, CodeGenerationContext } from '../types/ast';
 
 // Generate unique IDs for AST nodes
 let nodeIdCounter = 0;

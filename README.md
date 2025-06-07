@@ -148,6 +148,170 @@ s("<bd [hh hh]> sd hh").stack(note("c3 e3 g3").s("sawtooth"))
 - **Piano roll**: Note-based pattern display
 - **Debug mode**: Real-time pattern inspection
 
+## 🌳 AST Pattern System
+
+AlgoRave IDLE features a sophisticated **Abstract Syntax Tree (AST)** system for representing and manipulating musical patterns. This enables interactive pattern editing where users can click on pattern elements to transform them.
+
+### Core AST Architecture
+
+#### Node Types
+```typescript
+type ASTNodeType = 
+  | 'sound'           // Basic sound: sound("bd")
+  | 'sequence'        // Sequential patterns: "bd sd hh"
+  | 'stack'           // Parallel patterns: ["bd", "sd"]
+  | 'repeat'          // Repetition: "bd*4"
+  | 'subdivision'     // Time subdivision: "bd*[2 3 2]"
+  | 'rest'            // Silence: ~
+  | 'euclidean'       // Euclidean rhythm: "bd(3,8)"
+  | 'polyrhythm'      // Polyrhythmic: "bd(3,8,2)"
+  | 'effect'          // Effect chain: .gain(0.5)
+  | 'variable'        // Variable reference: $kick
+  | 'pattern';        // Root pattern container
+```
+
+#### Interactive Pattern Building
+```typescript
+// Create basic patterns
+const kick = patternBuilder.sound('bd');
+const hat = patternBuilder.sound('hh');
+const pattern = patternBuilder.sequence(kick, hat);
+
+// Transform patterns through mutations
+const mutations = [
+  { type: 'add_repeat', targetId: kick.id, value: 4 },
+  { type: 'euclideanify', targetId: hat.id, value: { pulses: 3, steps: 8 } },
+  { type: 'add_effect', targetId: pattern.id, value: { type: 'lpf', value: 800 } }
+];
+```
+
+### Interactive Features
+
+#### Click-to-Edit Interface
+- **Visual Pattern Rendering**: Each AST node renders as a clickable UI element
+- **Context-Aware Mutations**: Right-click suggests relevant transformations
+- **Real-Time Preview**: Changes immediately generate new Strudel code
+- **Undo/Redo Support**: Full pattern history for experimentation
+
+#### Smart Mutation System
+The AST system provides intelligent suggestions based on context:
+
+```typescript
+// For a basic sound node "bd"
+const suggestedMutations = [
+  'Replace with related sample (sd, hh, cp)',
+  'Add repetition (*2, *4, *8)',
+  'Create euclidean rhythm (3,8), (5,8)',
+  'Add effect (.lpf, .gain, .delay)',
+  'Subdivide into sequence',
+  'Add rest for spacing'
+];
+```
+
+#### Pattern Complexity Metrics
+```typescript
+interface PatternMetrics {
+  nodeCount: number;              // Total AST nodes
+  depth: number;                  // Maximum nesting level
+  rhythmicComplexity: number;     // Euclidean patterns, subdivisions
+  harmonicComplexity: number;     // Melodic elements, effects
+  interactiveElements: number;    // Clickable/editable components
+}
+```
+
+### Sample Categorization
+
+#### Comprehensive Sample Library
+The AST system includes a curated categorization of 1000+ samples from Dirt-Samples:
+
+```typescript
+const SAMPLE_CATEGORIES = [
+  { name: 'Bass Drums', samples: ['bd', 'bassdm', 'clubkick', 'hardkick'], mutationWeight: 10 },
+  { name: 'Snares & Claps', samples: ['sd', 'cp', 'hand', 'rim'], mutationWeight: 9 },
+  { name: 'Hi-hats', samples: ['hh', 'hc', 'ho', 'oh'], mutationWeight: 8 },
+  // ... 17 total categories
+];
+```
+
+#### Intelligent Sample Suggestions
+- **Category-Based**: Suggest samples from the same musical category
+- **Weighted Random**: Popular samples suggested more frequently  
+- **Context Aware**: Drum samples for rhythm, melodic for harmony
+- **Usage Tracking**: Learn user preferences over time
+
+### Usage Analytics
+
+#### Sample Usage Tracking
+```typescript
+interface SampleUsageStats {
+  [sampleName: string]: {
+    timesUsed: number;            // Usage counter
+    totalPlayTimeSeconds: number; // Duration metrics
+    lastUsed: number;             // Timestamp for relevance
+  };
+}
+```
+
+#### Achievement Integration
+- **Rhythm Rookie**: Use a sample 10 times
+- **Beat Veteran**: Use a sample 100 times  
+- **Sample Master**: Use a sample 1000 times
+- **Groove Legend**: Use a sample 10,000 times
+- **Pattern Architect**: Unlock interactive editing
+- **Sample Explorer**: Use 20 different samples
+
+### Technical Implementation
+
+#### AST to Strudel Code Generation
+```typescript
+function generateStrudelCode(node: ASTNode, context: CodeGenerationContext): string {
+  switch (node.type) {
+    case 'sound':
+      return `sound("${node.sample}")`;
+    case 'sequence':
+      return `"${node.children.map(generateStrudelCode).join(' ')}"`;
+    case 'euclidean':
+      return `${generateStrudelCode(node.children[0])}(${node.pulses},${node.steps})`;
+    case 'effect':
+      return `${generateStrudelCode(node.children[0])}.${node.effectType}(${node.effectValue})`;
+    // ... handle all node types
+  }
+}
+```
+
+#### Performance Optimization
+- **Immutable Updates**: All AST mutations create new trees
+- **Node Reuse**: Unchanged subtrees are preserved
+- **Lazy Evaluation**: Code generation only when needed
+- **Memoization**: Cache expensive operations
+
+### Educational Progression
+
+#### Gradual Complexity Introduction
+1. **Basic Sounds** → `sound("bd")` nodes
+2. **Sequences** → Sequential container nodes  
+3. **Effects** → Effect chain nodes
+4. **Rhythms** → Euclidean and subdivision nodes
+5. **Advanced** → Polyrhythms, variables, stacks
+
+#### Learning Through Interaction
+- **Visual Understanding**: See pattern structure clearly
+- **Experimental Safety**: Easy undo encourages exploration
+- **Progressive Unlocks**: New node types unlock with advancement
+- **Contextual Help**: Tooltips explain musical concepts
+
+### Future Enhancements
+
+#### Planned AST Features
+- **Pattern Templates**: Pre-built complex patterns to modify
+- **Collaborative Editing**: Real-time multi-user pattern building
+- **Pattern Evolution**: AI-suggested mutations for creativity
+- **Export/Import**: Share patterns as JSON between users
+- **Version History**: Timeline of pattern evolution
+- **Performance Mode**: Optimize AST for live performance
+
+The AST system transforms StrudelIdle from a simple idle game into a powerful, educational pattern editor that makes live coding accessible and engaging for all skill levels.
+
 ## 🧪 Testing Strategy
 
 ### End-to-End Coverage

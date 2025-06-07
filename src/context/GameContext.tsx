@@ -47,6 +47,10 @@ interface GameContextType {
   setBPM: (bpm: number) => void;
   // Debug functions
   resetPatternState: () => void;
+  // AST Pattern System
+  updatePatternAST: (lineKey: 'line1' | 'line2' | 'line3' | 'line4', ast: import('../types/ast').ASTNode | null) => void;
+  toggleInteractiveMode: () => void;
+  trackSampleUsage: (sampleName: string, duration: number) => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -1025,6 +1029,46 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, [addNews]);
 
+  // AST Pattern System functions
+  const updatePatternAST = useCallback((lineKey: 'line1' | 'line2' | 'line3' | 'line4', ast: import('../types/ast').ASTNode | null) => {
+    setGameState(prevState => ({
+      ...prevState,
+      patternAST: {
+        ...prevState.patternAST,
+        [lineKey]: ast
+      }
+    }));
+  }, []);
+
+  const toggleInteractiveMode = useCallback(() => {
+    setGameState(prevState => ({
+      ...prevState,
+      interactiveMode: !prevState.interactiveMode
+    }));
+  }, []);
+
+  const trackSampleUsage = useCallback((sampleName: string, duration: number) => {
+    setGameState(prevState => {
+      const currentStats = prevState.sampleUsageStats[sampleName] || {
+        timesUsed: 0,
+        totalPlayTimeSeconds: 0,
+        lastUsed: 0
+      };
+
+      return {
+        ...prevState,
+        sampleUsageStats: {
+          ...prevState.sampleUsageStats,
+          [sampleName]: {
+            timesUsed: currentStats.timesUsed + 1,
+            totalPlayTimeSeconds: currentStats.totalPlayTimeSeconds + duration,
+            lastUsed: Date.now()
+          }
+        }
+      };
+    });
+  }, []);
+
   const contextValue = useMemo(() => ({
     gameState,
     setGameState,
@@ -1055,7 +1099,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setBPM,
     // Debug functions
     resetPatternState,
-  }), [gameState, setGameState, addBeats, purchaseModule, purchaseHardware, addNews, purchasePhase, purchaseFeature, purchaseCodeOMatic, toggleCodeOMatic, setCodeOMaticComplexity, purchaseSampleBank, purchaseSampleVariant, setActiveSample, toggleSampleEnabled, unlockSoundLine, setSoundLineSample, unlockMelodicSample, unlockMusicalFeature, purchaseBPMUpgrade, purchaseBPMSlider, setBPM, resetPatternState]);
+    // AST Pattern System
+    updatePatternAST,
+    toggleInteractiveMode,
+    trackSampleUsage,
+  }), [gameState, setGameState, addBeats, purchaseModule, purchaseHardware, addNews, purchasePhase, purchaseFeature, purchaseCodeOMatic, toggleCodeOMatic, setCodeOMaticComplexity, purchaseSampleBank, purchaseSampleVariant, setActiveSample, toggleSampleEnabled, unlockSoundLine, setSoundLineSample, unlockMelodicSample, unlockMusicalFeature, purchaseBPMUpgrade, purchaseBPMSlider, setBPM, resetPatternState, updatePatternAST, toggleInteractiveMode, trackSampleUsage]);
 
   return (
     <GameContext.Provider value={contextValue}>

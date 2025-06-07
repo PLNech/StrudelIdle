@@ -78,6 +78,56 @@ export const ALL_ACHIEVEMENTS: { [id: string]: Achievement } = {
       return false;
     },
   },
+  
+  // Sample Usage Achievements
+  'rhythm_rookie': {
+    id: 'rhythm_rookie',
+    name: 'Rhythm Rookie',
+    description: 'Use a sample 10 times',
+    unlocked: false,
+    hidden: false,
+    condition: (state: GameState) => Object.values(state.sampleUsageStats).some(stats => stats.timesUsed >= 10)
+  },
+  'beat_veteran': {
+    id: 'beat_veteran',
+    name: 'Beat Veteran',
+    description: 'Use a sample 100 times',
+    unlocked: false,
+    hidden: false,
+    condition: (state: GameState) => Object.values(state.sampleUsageStats).some(stats => stats.timesUsed >= 100)
+  },
+  'sample_master': {
+    id: 'sample_master',
+    name: 'Sample Master',
+    description: 'Use a sample 1000 times',
+    unlocked: false,
+    hidden: false,
+    condition: (state: GameState) => Object.values(state.sampleUsageStats).some(stats => stats.timesUsed >= 1000)
+  },
+  'groove_legend': {
+    id: 'groove_legend',
+    name: 'Groove Legend',
+    description: 'Use a sample 10,000 times',
+    unlocked: false,
+    hidden: false,
+    condition: (state: GameState) => Object.values(state.sampleUsageStats).some(stats => stats.timesUsed >= 10000)
+  },
+  'pattern_architect': {
+    id: 'pattern_architect',
+    name: 'Pattern Architect',
+    description: 'Unlock interactive pattern editing',
+    unlocked: false,
+    hidden: false,
+    condition: (state: GameState) => state.interactiveMode
+  },
+  'sample_explorer': {
+    id: 'sample_explorer',
+    name: 'Sample Explorer',
+    description: 'Use 20 different samples',
+    unlocked: false,
+    hidden: false,
+    condition: (state: GameState) => Object.keys(state.sampleUsageStats).length >= 20
+  },
 };
 
 // Function to initialize achievements into game state

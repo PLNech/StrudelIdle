@@ -5,15 +5,7 @@ import { initStrudel } from '@strudel/web';
 // Global state for Strudel initialization
 let strudelInitialized = false;
 
-// Sample categorization based on Strudel.cc documentation
-const SAMPLE_CATEGORIES = {
-  bassDrums: ['bd'],
-  drums: ['sd', 'rim', 'cp', 'hh', 'oh', 'cr', 'rd', 'ht', 'mt', 'lt', 'sh', 'tb', 'cb', 'perc'],
-  breaks: ['breaks', 'amen', 'funky', 'apache', 'think', 'hotpants'],
-  bass: ['bass', 'moog', 'sub', 'bassgtr', 'ebs', 'bs'],
-  melodic: ['rhodes', 'piano', 'epiano', 'organ', 'gtr', 'synth', 'saw', 'square', 'pluck', 'bell', 'vibraphone', 'marimba', 'flute', 'sax', 'trumpet', 'violin', 'cello', 'clarinet'],
-  fx: ['fx', 'misc', 'noise', 'sweep', 'swoop', 'smash', 'glitch', 'click', 'pop', 'beep', 'blip', 'zap', 'laser']
-};
+// Sample categorization based on Strudel.cc documentation - moved to sampleCategories.ts
 
 // Log all available samples for debugging
 const logAllAvailableSamples = () => {
@@ -47,10 +39,9 @@ const logAllAvailableSamples = () => {
       try {
         if ((window as any).evaluate) {
           // Just test if sample exists without playing
-          const testCode = `sound("${sample}").gain(0)`;
           console.log(`✅ Sample '${sample}' available`);
         }
-      } catch (e) {
+      } catch (e: any) {
         console.log(`❌ Sample '${sample}' not available:`, e.message);
       }
     });

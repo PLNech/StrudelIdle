@@ -19,6 +19,7 @@ import CurrentPattern from './components/CurrentPattern';
 import BPMUpgrades from './components/BPMUpgrades';
 import StickyHeader from './components/StickyHeader';
 import SoundLines from './components/SoundLines';
+import InteractivePatternEditor from './components/InteractivePatternEditor';
 import { useGame } from './context/GameContext';
 import { useAchievementNotifications } from './hooks/useAchievementNotifications';
 
@@ -102,6 +103,10 @@ const GameContent: React.FC = () => {
             </div>
             <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
               <SoundLines />
+            </div>
+            {/* Interactive Pattern Editor - Prominent placement */}
+            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+              <InteractivePatternEditor />
             </div>
             <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
               <CodeOMatic />
