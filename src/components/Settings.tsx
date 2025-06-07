@@ -3,6 +3,7 @@ import React, { useState, useRef } from 'react';
 import { useGame } from '../context/GameContext';
 import { useSaveGame } from '../hooks/useSaveGame';
 import { Button } from './ui/button';
+import ThemeToggle from './ThemeToggle';
 
 const Settings: React.FC = () => {
   const { gameState, setGameState } = useGame();
@@ -87,6 +88,16 @@ const Settings: React.FC = () => {
           <Button onClick={resetGame} className="w-full" variant="destructive">
             🗑️ Reset Game
           </Button>
+        </div>
+
+        {/* Theme Settings */}
+        <div className="space-y-3 mb-6">
+          <h3 className="text-lg font-semibold">Appearance</h3>
+          
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Theme</span>
+            <ThemeToggle />
+          </div>
         </div>
 
         {/* Audio Settings */}

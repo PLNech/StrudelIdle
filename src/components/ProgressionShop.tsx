@@ -9,6 +9,7 @@ const ProgressionShop: React.FC = () => {
   const { gameState, purchaseFeature, purchasePhase, setActiveSample } = useGame();
   const [selectedPhase, setSelectedPhase] = useState<string>('first_sounds');
   const [activeTab, setActiveTab] = useState<'upgrades' | 'samples'>('upgrades');
+  const [hidePurchased, setHidePurchased] = useState<boolean>(false);
   const lastPlayTimeRef = React.useRef<number>(0);
 
   // Helper function for resource emojis
@@ -132,6 +133,22 @@ const ProgressionShop: React.FC = () => {
         >
           🎵 Sample Banks
         </button>
+        
+        {/* Hide Purchased Toggle - only show for upgrades tab */}
+        {activeTab === 'upgrades' && (
+          <div className="flex items-center gap-2 ml-auto">
+            <input
+              type="checkbox"
+              id="hidePurchased"
+              checked={hidePurchased}
+              onChange={(e) => setHidePurchased(e.target.checked)}
+              className="rounded"
+            />
+            <label htmlFor="hidePurchased" className="text-sm text-muted-foreground cursor-pointer">
+              Hide purchased
+            </label>
+          </div>
+        )}
       </div>
 
       {activeTab === 'upgrades' && (
@@ -189,12 +206,99 @@ const ProgressionShop: React.FC = () => {
             )}
           </div>
 
-          {/* Features */}
+          {/* Features - Two Column Layout */}
           {isPhaseUnlocked(currentPhase.id) && (
-            <div className="space-y-3">
-              <h4 className="text-md font-semibold">Available Features:</h4>
-              
-              {currentPhase.features.map((feature) => (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Music Features Column */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-primary border-b border-primary/20 pb-2">
+                  🎵 Music & Sound Features
+                </h3>
+                {currentPhase.features
+                  .filter(feature => ['sound', 'notation', 'pattern'].includes(feature.category))
+                  .filter(feature => !hidePurchased || !isFeatureUnlocked(feature.id))
+                  .map((feature) => (
+                    <div
+                      key={feature.id}
+                      className={`bg-gradient-to-r ${getCategoryColor(feature.category)} rounded-lg p-4 border`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span>{getCategoryIcon(feature.category)}</span>
+                            <h5 className="font-semibold">{feature.name}</h5>
+                            <span className="text-xs bg-background/50 px-2 py-1 rounded-full flex items-center gap-1">
+                              {getResourceEmoji(feature.category)}
+                              {feature.category}
+                            </span>
+                            {isFeatureUnlocked(feature.id) && (
+                              <span className="text-green-400 text-sm">✓ Unlocked</span>
+                            )}
+                          </div>
+                          
+                          <p className="text-sm text-muted-foreground mb-2">
+                            {feature.description}
+                          </p>
+                          
+                          <button
+                            onClick={() => isFeatureUnlocked(feature.id) && handleSyntaxClick(feature.strudelSyntax)}
+                            disabled={!isFeatureUnlocked(feature.id)}
+                            className={`bg-background/30 rounded px-3 py-2 font-mono text-xs w-full text-left transition-colors ${
+                              isFeatureUnlocked(feature.id) 
+                                ? 'hover:bg-background/50 cursor-pointer' 
+                                : 'cursor-not-allowed opacity-50'
+                            }`}
+                            title={isFeatureUnlocked(feature.id) ? 'Click to set as current pattern' : 'Unlock this feature first'}
+                          >
+                            {feature.strudelSyntax}
+                          </button>
+                          
+                          {feature.example && (
+                            <div className="mt-2 text-xs text-muted-foreground">
+                              <span className="font-medium">Example: </span>
+                              <button
+                                onClick={() => isFeatureUnlocked(feature.id) && handleSyntaxClick(feature.example!)}
+                                disabled={!isFeatureUnlocked(feature.id)}
+                                className={`bg-background/20 px-1 rounded font-mono transition-colors ${
+                                  isFeatureUnlocked(feature.id) 
+                                    ? 'hover:bg-background/40 cursor-pointer' 
+                                    : 'cursor-not-allowed opacity-50'
+                                }`}
+                                title={isFeatureUnlocked(feature.id) ? 'Click to set as current pattern' : 'Unlock this feature first'}
+                              >
+                                {feature.example}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="ml-4 text-right">
+                          <div className="text-sm font-semibold mb-2 flex items-center gap-1">
+                            {getResourceEmoji('beats')} {feature.cost}
+                          </div>
+                          <Button
+                            onClick={() => handlePurchaseFeature(feature)}
+                            disabled={isFeatureUnlocked(feature.id) || !canAffordFeature(feature)}
+                            size="sm"
+                            variant={isFeatureUnlocked(feature.id) ? "secondary" : "default"}
+                          >
+                            {isFeatureUnlocked(feature.id) ? 'Unlocked' : 'Learn'}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+
+              {/* Effects & Advanced Column */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-accent border-b border-accent/20 pb-2">
+                  🎚️ Effects & Advanced Features
+                </h3>
+                {currentPhase.features
+                  .filter(feature => ['effect', 'advanced'].includes(feature.category))
+                  .filter(feature => !hidePurchased || !isFeatureUnlocked(feature.id))
+                  .map((feature) => (
                 <div
                   key={feature.id}
                   className={`bg-gradient-to-r ${getCategoryColor(feature.category)} rounded-lg p-4 border`}
@@ -265,6 +369,8 @@ const ProgressionShop: React.FC = () => {
                   </div>
                 </div>
               ))}
+      
+              </div>
             </div>
           )}
 
@@ -276,8 +382,8 @@ const ProgressionShop: React.FC = () => {
 
         </div>
       )}
-  </div>
-  )
+    </div>
+  );
 };
 
 export default ProgressionShop;

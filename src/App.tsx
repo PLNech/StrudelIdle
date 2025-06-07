@@ -16,6 +16,7 @@ import AchievementNotification from './components/AchievementNotification';
 import PatternBuilder from './components/PatternBuilder';
 import CurrentPattern from './components/CurrentPattern';
 import BPMUpgrades from './components/BPMUpgrades';
+import StickyHeader from './components/StickyHeader';
 import { useGame } from './context/GameContext';
 import { useAchievementNotifications } from './hooks/useAchievementNotifications';
 
@@ -25,8 +26,11 @@ const GameContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/5 text-foreground">
+      {/* Sticky Header for Scrolling */}
+      <StickyHeader />
+      
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="text-center">
             <div className="flex items-center justify-center space-x-4 mb-2">

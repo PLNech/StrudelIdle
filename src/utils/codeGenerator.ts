@@ -37,6 +37,26 @@ const COMPLEX_PATTERNS = [
   '[bd bd] [~ sd]'
 ];
 
+// Enhanced sub-sequence patterns
+const SUB_SEQUENCE_PATTERNS = [
+  'bd [hh [cp cp]] sd [hh oh]',
+  '[bd bd] [hh [sd ~]] [bd ~] hh',
+  'bd [hh hh [cp ~]] sd [oh hh]',
+  '<bd [hh hh]> <sd [cp cp]>',
+  'bd [[hh cp] hh] sd [[oh ~] hh]',
+  '[bd [~ bd]] [hh [cp sd]] [~ [bd hh]] sd',
+  '<[bd bd] [sd hh]> [cp [hh oh]]',
+  'bd [hh [cp [oh ~]]] sd [hh [~ cp]]'
+];
+
+// Polyrhythmic patterns for advanced complexity
+const POLYRHYTHMIC_PATTERNS = [
+  'bd(3,8), hh(5,8), sd(2,8)',
+  'bd(4,7), [hh cp](3,5), sd(2,7)',
+  '<bd(3,8) sd(2,8)>, hh(7,8)',
+  'bd(5,16), [hh [cp ~]](3,8), sd(4,16)'
+];
+
 export class CodeGenerator {
   private random(): number {
     return Math.random();
@@ -75,21 +95,44 @@ export class CodeGenerator {
       availableSamples.push(...EXTENDED_SAMPLES);
     }
 
-    // Choose pattern complexity based on unlocked features
+    // Choose pattern complexity based on unlocked features and complexity
     let pattern: string;
     
-    if (this.hasFeature(context, 'sub_sequences') && context.complexity > 0.6) {
+    if (this.hasFeature(context, 'euclidean_engine') && context.complexity > 0.8) {
+      // Use polyrhythmic patterns for highest complexity
+      pattern = this.choose(POLYRHYTHMIC_PATTERNS);
+    } else if (this.hasFeature(context, 'nested_patterns') && context.complexity > 0.7) {
+      // Use advanced sub-sequence patterns
+      pattern = this.choose(SUB_SEQUENCE_PATTERNS);
+    } else if (this.hasFeature(context, 'sub_sequences') && context.complexity > 0.5) {
+      // Use complex patterns with basic sub-sequences
       pattern = this.choose(COMPLEX_PATTERNS);
     } else {
+      // Use simple patterns
       pattern = this.choose(SIMPLE_PATTERNS);
     }
 
     // Replace placeholder samples with actual samples
-    const selectedSamples = this.shuffle(availableSamples).slice(0, 4);
+    const selectedSamples = this.shuffle(availableSamples).slice(0, 6);
     pattern = pattern.replace(/bd/g, selectedSamples[0] || 'bd');
     pattern = pattern.replace(/hh/g, selectedSamples[1] || 'hh');
     pattern = pattern.replace(/sd/g, selectedSamples[2] || 'sd');
     pattern = pattern.replace(/cp/g, selectedSamples[3] || 'cp');
+    pattern = pattern.replace(/oh/g, selectedSamples[4] || 'oh');
+    pattern = pattern.replace(/cr/g, selectedSamples[5] || 'cr');
+    
+    // Add sample variants if feature is unlocked
+    if (this.hasFeature(context, 'sample_variations') && this.random() > 0.6) {
+      // Replace some samples with variants
+      const variantRegex = /(bd|hh|sd|cp|oh|cr)(?![:\d])/g;
+      pattern = pattern.replace(variantRegex, (match) => {
+        if (this.random() > 0.7) {
+          const variant = Math.floor(this.random() * 3); // 0-2 variants
+          return `${match}:${variant}`;
+        }
+        return match;
+      });
+    }
 
     let result = `s("${pattern}")`;
 
