@@ -6,17 +6,21 @@ const PatternBuilder: React.FC = () => {
   const { gameState } = useGame();
 
   return (
-    <div className="bg-card text-card-foreground p-4 rounded-lg shadow-md mb-4">
-      <h2 className="text-xl font-bold mb-4">Pattern Structure</h2>
+    <div className="p-6">
+      <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+        <span className="text-2xl">🎼</span>
+        Pattern Structure
+      </h2>
       
       {/* Current Pattern Display */}
       <div className="mb-4">
         <h3 className="text-lg font-semibold mb-2">Current Pattern</h3>
-        <div className="bg-primary/10 text-primary-foreground p-3 rounded-md font-mono text-sm">
-          <pre className="whitespace-pre-wrap">{gameState.strudelCode}</pre>
+        <div className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 p-4 rounded-lg font-mono text-sm">
+          <pre className="whitespace-pre-wrap text-foreground">{gameState.strudelCode}</pre>
         </div>
-        <div className="text-xs text-muted-foreground mt-1">
-          BPM: {gameState.strudelBPM} | Looping: {gameState.hasLooping ? 'ON' : 'OFF'}
+        <div className="flex items-center justify-between text-xs text-muted-foreground mt-2 px-1">
+          <span>BPM: {gameState.strudelBPM}</span>
+          <span>Looping: {gameState.hasLooping ? '🔄 ON' : '⏸️ OFF'}</span>
         </div>
       </div>
 

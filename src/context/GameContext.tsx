@@ -106,9 +106,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               // Apply sample variations if unlocked
               if (prevState.modules['sample_variations']?.acquiredCount > 0) {
                 const variation = Math.floor(Math.random() * 3);
-                moduleLines.push(`sound("${sampleName}:${variation}")`);
+                moduleLines.push(`s("${sampleName}:${variation}")`);
               } else {
-                moduleLines.push(`sound("${sampleName}")`);
+                moduleLines.push(`s("${sampleName}")`);
               }
             } else if (module.type === 'synth') {
               if (module.id === 'note_c') {
@@ -138,7 +138,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Build the final Strudel code with authentic progression features
         if (moduleLines.length === 0) {
-            currentStrudelCode = 'sound("bd")';
+            currentStrudelCode = 's("bd")';
         } else {
             let basePattern = '';
             const patterns: string[] = [];
@@ -148,8 +148,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const notePatterns: string[] = [];
             
             moduleLines.forEach(line => {
-                if (line.includes('sound(')) {
-                    samplePatterns.push(line.replace('sound("', '').replace('")', ''));
+                if (line.includes('s(')) {
+                    samplePatterns.push(line.replace('s("', '').replace('")', ''));
                 } else if (line.includes('note(')) {
                     notePatterns.push(line);
                 }
@@ -193,7 +193,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         sampleSequence = sampleSequence.replace(/bd/g, 'bd(3,8)').replace(/hh/g, 'hh(2,5)');
                     }
                     
-                    patterns.push(`sound("${sampleSequence}")`);
+                    patterns.push(`s("${sampleSequence}")`);
                 }
                 
                 // Handle note patterns
@@ -205,7 +205,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (patterns.length > 1) {
                     basePattern = patterns[0] + '.stack(' + patterns.slice(1).join(', ') + ')';
                 } else {
-                    basePattern = patterns[0] || 'sound("bd")';
+                    basePattern = patterns[0] || 's("bd")';
                 }
             } else {
                 // Simple stacking without sequence building

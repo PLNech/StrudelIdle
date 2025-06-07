@@ -8,19 +8,19 @@
 
 /* Base styles and custom properties for theming (e.g., from Shadcn-UI setup) */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
+  color-scheme: dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background-color: #0a0a0a;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --radius: 0.625rem; /* Default border radius */
+  --radius: 0.75rem; /* Default border radius */
   --background: oklch(1 0 0);
   --foreground: oklch(0.129 0.042 264.695);
   --card: oklch(1 0 0);
@@ -147,25 +147,26 @@ button:focus-visible {
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
+body {
+  /* Force dark theme always */
+  --background: oklch(0.09 0.01 240);
+  --foreground: oklch(0.98 0.002 240);
+  --card: oklch(0.12 0.02 240);
+  --card-foreground: oklch(0.96 0.002 240);
+  --popover: oklch(0.11 0.02 240);
+  --popover-foreground: oklch(0.96 0.002 240);
+  --primary: oklch(0.7 0.15 250);
+  --primary-foreground: oklch(0.1 0.02 240);
+  --secondary: oklch(0.18 0.03 240);
+  --secondary-foreground: oklch(0.92 0.002 240);
+  --muted: oklch(0.16 0.02 240);
+  --muted-foreground: oklch(0.65 0.05 240);
+  --accent: oklch(0.22 0.04 240);
+  --accent-foreground: oklch(0.96 0.002 240);
+  --destructive: oklch(0.65 0.20 15);
+  --border: oklch(0.22 0.04 240);
+  --input: oklch(0.18 0.03 240);
+  --ring: oklch(0.7 0.15 250);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);

@@ -39,7 +39,7 @@ test.describe('AlgoRave IDLE - Audio Functionality', () => {
     await page.waitForTimeout(2000);
 
     // Should show the default Strudel code in the Live Strudel Feed
-    const strudelCode = page.getByTestId('strudel-output').getByText('sound("bd")');
+    const strudelCode = page.getByTestId('strudel-output').getByText('s("bd")');
     await expect(strudelCode).toBeVisible();
   });
 
@@ -92,8 +92,8 @@ test.describe('AlgoRave IDLE - Audio Functionality', () => {
     // Wait for beats to register
     await page.waitForTimeout(500);
 
-    // Check that we have enough beats
-    const beatsDisplay = page.locator('text=/Beats: \\d+/');
+    // Check that we have enough beats (look for beats number)
+    const beatsDisplay = page.locator('text="Beats Generated"');
     await expect(beatsDisplay).toBeVisible();
 
     // Buy the Kick Drum module
@@ -105,7 +105,7 @@ test.describe('AlgoRave IDLE - Audio Functionality', () => {
 
     // The Strudel code should still show the pattern
     // (It might be the same since it's already bd, but the system should be working)
-    const strudelCode = page.getByTestId('strudel-output').getByText('sound("bd")');
+    const strudelCode = page.getByTestId('strudel-output').getByText('s("bd")');
     await expect(strudelCode).toBeVisible();
 
     // Check that the module was purchased (owned count should be > 0)

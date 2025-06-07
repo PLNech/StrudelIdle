@@ -14,12 +14,15 @@ const Clicker: React.FC = () => {
   };
 
   return (
-    <div className="bg-card text-card-foreground p-4 rounded-lg shadow-md mb-4 flex flex-col items-center">
-      <h2 className="text-xl font-bold mb-2">Tap Beat</h2>
+    <div className="p-6">
+      <h2 className="text-xl font-bold mb-2 flex items-center gap-2">
+        <span className="text-2xl">🥁</span>
+        Tap Beat
+      </h2>
       <p className="text-sm text-muted-foreground mb-4">Click to generate beats!</p>
       <Button
         onClick={handleClick}
-        className="w-full py-4 text-lg font-semibold"
+        className="w-full py-4 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg"
         data-testid="clicker"
       >
         Play `bd` (1 Beat)

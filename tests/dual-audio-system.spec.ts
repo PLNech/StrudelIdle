@@ -32,8 +32,8 @@ test.describe('AlgoRave IDLE - Dual Audio System', () => {
     // 4. Verify pattern structure display
     await expect(page.locator('text=Pattern Structure')).toBeVisible();
     await expect(page.locator('text=Current Pattern')).toBeVisible();
-    await expect(page.locator('text=BPM:')).toBeVisible();
-    await expect(page.locator('text=Looping:')).toBeVisible();
+    await expect(page.locator('text=/BPM: \\d+/')).toBeVisible();
+    await expect(page.locator('text=/Looping: (ON|OFF)/')).toBeVisible();
 
     // 5. Verify pattern elements preview
     await expect(page.locator('text=Pattern Elements')).toBeVisible();

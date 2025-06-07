@@ -20,40 +20,83 @@ const GameContent: React.FC = () => {
   const { currentNotification, closeCurrentNotification } = useAchievementNotifications(gameState.achievements);
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-4 sm:p-6 lg:p-8 flex flex-col items-center font-sans">
-      <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-primary mb-6 animate-fade-in-down">AlgoRave IDLE</h1>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full max-w-7xl">
-        {/* Left Column */}
-        <div className="lg:col-span-1 flex flex-col space-y-6">
-          <Clicker />
-          <BeatDisplay />
-          <PatternBuilder />
-          <StrudelOutput />
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/5 text-foreground">
+      {/* Header */}
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-sm">🎵</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+              AlgoRave IDLE
+            </h1>
+          </div>
+          <div className="text-sm text-muted-foreground hidden sm:block">
+            Real-time live coding • Powered by Strudel.cc
+          </div>
         </div>
+      </header>
 
-        {/* Middle Column (Main Shop) */}
-        <div className="lg:col-span-1 flex flex-col space-y-6">
-          <ModuleShop />
-          <HardwareShop />
+      {/* Main Content */}
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 w-full max-w-[1400px] mx-auto">
+          {/* Left Sidebar - Controls & Audio */}
+          <div className="xl:col-span-4 flex flex-col space-y-6">
+            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+              <Clicker />
+            </div>
+            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+              <BeatDisplay />
+            </div>
+            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+              <StrudelOutput />
+            </div>
+            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+              <PatternBuilder />
+            </div>
+          </div>
+
+          {/* Center - Main Shops */}
+          <div className="xl:col-span-5 flex flex-col space-y-6">
+            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+              <ModuleShop />
+            </div>
+            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+              <HardwareShop />
+            </div>
+          </div>
+
+          {/* Right Sidebar - Progress & Info */}
+          <div className="xl:col-span-3 flex flex-col space-y-6">
+            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+              <NewsFeed />
+            </div>
+            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+              <AchievementsDisplay />
+            </div>
+          </div>
         </div>
+      </main>
 
-        {/* Right Column */}
-        <div className="lg:col-span-1 flex flex-col space-y-6">
-          <NewsFeed />
-          <AchievementsDisplay />
-          {/* TODO: Add Prestige Button / Panel */}
-          {/* TODO: Add Audience Metrics Display */}
-          {/* TODO: Add Studio Rack Visualizer */}
+      {/* Footer */}
+      <footer className="border-t border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 mt-12">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between text-sm text-muted-foreground">
+            <div className="flex items-center space-x-2 mb-2 sm:mb-0">
+              <span>🎮</span>
+              <span>AlgoRave IDLE</span>
+              <span className="text-border">•</span>
+              <span>Educational Music Game</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span>Inspired by live coding & idle games</span>
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* Footer for general game info */}
-      <footer className="mt-8 text-muted-foreground text-sm">
-        <p>AlgoRave IDLE MVP - Powered by Strudel.cc & React</p>
-        <p>Inspired by Cookie Clicker, Kitten Village, Factorio, Dwarf Fortress</p>
       </footer>
       
-      {/* Settings Modal */}
+      {/* Modals & Overlays */}
       <Settings />
       
       {/* Achievement Notifications */}

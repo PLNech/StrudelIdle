@@ -60,11 +60,32 @@ const playStrudelPattern = (code: string, bpm: number) => {
 
 const stopStrudel = () => {
   try {
+    // Try multiple methods to ensure audio stops
     if ((window as any).hush) {
       (window as any).hush();
-      console.log('Strudel.cc stopped.');
-    } else {
-      console.warn('Strudel hush function not available');
+      console.log('Strudel.cc stopped via hush().');
+    }
+    
+    // Also try stopping the audio context if available
+    if ((window as any).getAudioContext) {
+      const ctx = (window as any).getAudioContext();
+      if (ctx && ctx.suspend) {
+        ctx.suspend().then(() => {
+          console.log('Audio context suspended.');
+          // Resume it immediately for next play
+          ctx.resume();
+        });
+      }
+    }
+    
+    // Try to stop any running patterns more aggressively
+    if ((window as any).stop) {
+      (window as any).stop();
+      console.log('Strudel.cc stopped via stop().');
+    }
+    
+    if (!((window as any).hush || (window as any).stop)) {
+      console.warn('No Strudel stop functions available');
     }
   } catch (error) {
     console.error('Error stopping Strudel:', error);

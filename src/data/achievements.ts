@@ -60,7 +60,7 @@ export const ALL_ACHIEVEMENTS: { [id: string]: Achievement } = {
     description: 'Experience your BPS drop by 90% then recover to 200% of its previous peak.',
     unlocked: false,
     hidden: true,
-    condition: (_state: GameState) => {
+    condition: () => {
       // This achievement needs a way to track BPS history and peaks/troughs.
       // For MVP, we'll mark this as a TODO and just return false.
       // TODO: Implement BPS history tracking in GameState or a dedicated hook.
@@ -73,7 +73,7 @@ export const ALL_ACHIEVEMENTS: { [id: string]: Achievement } = {
     description: 'Produce one billion beats from percussive samples (bd, sn, hh).',
     unlocked: false,
     hidden: true,
-    condition: (_state: GameState) => {
+    condition: () => {
       // TODO: Requires tracking cumulative beats per module type.
       return false;
     },
