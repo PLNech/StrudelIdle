@@ -105,6 +105,14 @@ export interface GameState {
     circleOfFifths: boolean;
     jazzSequences: boolean;
   };
+  // Jazz Theory Progressions
+  jazzProgressions: {
+    [progressionId: string]: {
+      unlocked: boolean;
+      purchaseDate: number;
+      timesPlayed: number;
+    };
+  };
   // New progression system
   unlockedPhases: string[];
   unlockedFeatures: string[];
@@ -194,6 +202,8 @@ export const INITIAL_GAME_STATE: GameState = {
     circleOfFifths: false,
     jazzSequences: false,
   },
+  // Jazz Theory Progressions
+  jazzProgressions: {},
   // New progression system
   unlockedPhases: ['first_sounds'], // First phase always unlocked
   unlockedFeatures: ['basic_drums'], // Basic drums always available

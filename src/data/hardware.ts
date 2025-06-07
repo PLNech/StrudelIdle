@@ -53,10 +53,20 @@ export const ALL_HARDWARE: { [id: string]: Hardware } = {
     id: 'dsp_chip_low',
     name: 'Low-Power DSP Chip',
     type: 'dsp',
-    baseCost: 250,
-    capacity: 0.1, // Small DSP capacity (e.g., GFLOPs)
+    baseCost: 200,
+    capacity: 1, // 1 DSP unit capacity
     acquiredCount: 0,
     description: 'A dedicated chip for processing audio effects.',
+    unlocked: true, // Make DSP available early
+  },
+  'dsp_chip_mid': {
+    id: 'dsp_chip_mid',
+    name: 'Mid-Range DSP Chip',
+    type: 'dsp',
+    baseCost: 800,
+    capacity: 4, // 4 DSP units capacity
+    acquiredCount: 0,
+    description: 'More powerful DSP for complex effect chains.',
     unlocked: false,
   },
   // TODO: Add more powerful DSP chips

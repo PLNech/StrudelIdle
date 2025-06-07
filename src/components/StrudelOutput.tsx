@@ -146,6 +146,61 @@ const StrudelOutput: React.FC = () => {
         </div>
       )}
 
+      {/* Volume Controls */}
+      <div className="mb-4 bg-secondary/20 rounded-lg p-3 border border-secondary/30">
+        <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+          <span>🔊</span>
+          Volume Controls
+        </h3>
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium w-16">Master</label>
+            <input 
+              type="range" 
+              min="0" 
+              max="1" 
+              step="0.1"
+              defaultValue="0.7"
+              className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              onChange={(e) => {
+                const volume = parseFloat(e.target.value);
+                if ((window as any).getAudioContext) {
+                  const ctx = (window as any).getAudioContext();
+                  if (ctx.destination.gain) {
+                    ctx.destination.gain.value = volume;
+                  }
+                }
+              }}
+            />
+            <span className="text-xs w-8 text-muted-foreground">70%</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium w-16">Drums</label>
+            <input 
+              type="range" 
+              min="0" 
+              max="1" 
+              step="0.1"
+              defaultValue="0.8"
+              className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            />
+            <span className="text-xs w-8 text-muted-foreground">80%</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="text-xs font-medium w-16">Melodic</label>
+            <input 
+              type="range" 
+              min="0" 
+              max="1" 
+              step="0.1"
+              defaultValue="0.6"
+              className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            />
+            <span className="text-xs w-8 text-muted-foreground">60%</span>
+          </div>
+        </div>
+      </div>
+
       <div className="flex gap-2">
         <Button
           onClick={togglePlay}
@@ -153,17 +208,6 @@ const StrudelOutput: React.FC = () => {
           className="flex-1"
         >
           {isPlaying ? 'Stop AlgoRave' : 'Start AlgoRave'}
-        </Button>
-        <Button
-          variant="outline"
-          disabled={!isPlaying}
-          onClick={() => {
-            if ((window as any).hush) {
-              (window as any).hush();
-            }
-          }}
-        >
-          Hush
         </Button>
       </div>
       

@@ -20,6 +20,8 @@ import BPMUpgrades from './components/BPMUpgrades';
 import StickyHeader from './components/StickyHeader';
 import SoundLines from './components/SoundLines';
 import InteractivePatternEditor from './components/InteractivePatternEditor';
+import EnhancedSampleBank from './components/EnhancedSampleBank';
+import JazzTheoryProgression from './components/JazzTheoryProgression';
 import { useGame } from './context/GameContext';
 import { useAchievementNotifications } from './hooks/useAchievementNotifications';
 
@@ -104,12 +106,20 @@ const GameContent: React.FC = () => {
             <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
               <SoundLines />
             </div>
+            {/* Jazz Theory & Piano Progression */}
+            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+              <JazzTheoryProgression />
+            </div>
             {/* Interactive Pattern Editor - Prominent placement */}
             <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
               <InteractivePatternEditor />
             </div>
             <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
               <CodeOMatic />
+            </div>
+            {/* Enhanced Sample Bank */}
+            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+              <EnhancedSampleBank />
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-1 gap-4">
               <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">

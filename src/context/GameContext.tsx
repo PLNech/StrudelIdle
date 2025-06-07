@@ -51,6 +51,9 @@ interface GameContextType {
   updatePatternAST: (lineKey: 'line1' | 'line2' | 'line3' | 'line4', ast: import('../types/ast').ASTNode | null) => void;
   toggleInteractiveMode: () => void;
   trackSampleUsage: (sampleName: string, duration: number) => void;
+  // Jazz Theory Progressions
+  purchaseJazzProgression: (progressionId: string, cost: number) => void;
+  playJazzProgression: (progressionId: string) => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -1069,6 +1072,45 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, []);
 
+  // Jazz Theory Progression functions
+  const purchaseJazzProgression = useCallback((progressionId: string, cost: number) => {
+    setGameState(prevState => {
+      if (prevState.beats < cost) return prevState;
+      if (prevState.jazzProgressions[progressionId]?.unlocked) return prevState;
+
+      return {
+        ...prevState,
+        beats: prevState.beats - cost,
+        jazzProgressions: {
+          ...prevState.jazzProgressions,
+          [progressionId]: {
+            unlocked: true,
+            purchaseDate: Date.now(),
+            timesPlayed: 0
+          }
+        }
+      };
+    });
+  }, []);
+
+  const playJazzProgression = useCallback((progressionId: string) => {
+    setGameState(prevState => {
+      const progression = prevState.jazzProgressions[progressionId];
+      if (!progression?.unlocked) return prevState;
+
+      return {
+        ...prevState,
+        jazzProgressions: {
+          ...prevState.jazzProgressions,
+          [progressionId]: {
+            ...progression,
+            timesPlayed: progression.timesPlayed + 1
+          }
+        }
+      };
+    });
+  }, []);
+
   const contextValue = useMemo(() => ({
     gameState,
     setGameState,
@@ -1103,7 +1145,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updatePatternAST,
     toggleInteractiveMode,
     trackSampleUsage,
-  }), [gameState, setGameState, addBeats, purchaseModule, purchaseHardware, addNews, purchasePhase, purchaseFeature, purchaseCodeOMatic, toggleCodeOMatic, setCodeOMaticComplexity, purchaseSampleBank, purchaseSampleVariant, setActiveSample, toggleSampleEnabled, unlockSoundLine, setSoundLineSample, unlockMelodicSample, unlockMusicalFeature, purchaseBPMUpgrade, purchaseBPMSlider, setBPM, resetPatternState, updatePatternAST, toggleInteractiveMode, trackSampleUsage]);
+    // Jazz Theory Progressions
+    purchaseJazzProgression,
+    playJazzProgression,
+  }), [gameState, setGameState, addBeats, purchaseModule, purchaseHardware, addNews, purchasePhase, purchaseFeature, purchaseCodeOMatic, toggleCodeOMatic, setCodeOMaticComplexity, purchaseSampleBank, purchaseSampleVariant, setActiveSample, toggleSampleEnabled, unlockSoundLine, setSoundLineSample, unlockMelodicSample, unlockMusicalFeature, purchaseBPMUpgrade, purchaseBPMSlider, setBPM, resetPatternState, updatePatternAST, toggleInteractiveMode, trackSampleUsage, purchaseJazzProgression, playJazzProgression]);
 
   return (
     <GameContext.Provider value={contextValue}>

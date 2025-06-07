@@ -233,8 +233,14 @@ export function generateStrudelCode(node: ASTNode, context: CodeGenerationContex
       
       case 'sequence':
         if (!n.children?.length) return 'silence';
-        const seqPatterns = n.children.map(nodeToCode).join(' ');
-        return `"${seqPatterns}"`;
+        const seqPatterns = n.children.map(child => {
+          if (child.type === 'sound') {
+            const sample = child.sample || 'bd';
+            return context.enabledSamples.has(sample) ? sample : 'bd';
+          }
+          return nodeToCode(child);
+        }).join(' ');
+        return `s("${seqPatterns}")`;
       
       case 'stack':
         if (!n.children?.length) return 'silence';

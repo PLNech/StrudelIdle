@@ -51,25 +51,58 @@ const SoundLines: React.FC = () => {
           <div className="space-y-3">
             {line.type === 'melodic' ? (
               <div>
-                <label className="text-sm font-medium mb-2 block">Select Melodic Sample:</label>
-                <select 
-                  value={line.selectedSample || ''}
-                  onChange={(e) => setSoundLineSample(lineKey, e.target.value)}
-                  className="w-full bg-background border rounded px-3 py-2 text-sm"
-                  disabled={gameState.unlockedMelodicSamples.length === 0}
-                >
-                  <option value="">Select sample...</option>
-                  {gameState.unlockedMelodicSamples.map(sample => (
-                    <option key={sample} value={sample}>
-                      {sample.charAt(0).toUpperCase() + sample.slice(1)}
-                    </option>
-                  ))}
-                </select>
+                <label className="text-sm font-medium mb-2 block">
+                  {lineKey === 'line3' ? 'Harmonic Content:' : 'Select Melodic Sample:'}
+                </label>
                 
-                {gameState.unlockedMelodicSamples.length === 0 && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Unlock melodic samples first
-                  </p>
+                {lineKey === 'line3' ? (
+                  // Line 3 is for jazz progressions
+                  <div className="space-y-2">
+                    <select 
+                      value={line.selectedSample || ''}
+                      onChange={(e) => setSoundLineSample(lineKey, e.target.value)}
+                      className="w-full bg-background border rounded px-3 py-2 text-sm"
+                    >
+                      <option value="">Select harmony...</option>
+                      <option value="piano">Piano (Basic)</option>
+                      {Object.keys(gameState.jazzProgressions).filter(id => 
+                        gameState.jazzProgressions[id].unlocked
+                      ).map(progressionId => (
+                        <option key={progressionId} value={`jazz_${progressionId}`}>
+                          Jazz: {progressionId.replace('_', ' ')}
+                        </option>
+                      ))}
+                    </select>
+                    
+                    {Object.keys(gameState.jazzProgressions).length === 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Unlock jazz progressions to add harmonic content
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  // Other melodic lines use regular samples
+                  <div>
+                    <select 
+                      value={line.selectedSample || ''}
+                      onChange={(e) => setSoundLineSample(lineKey, e.target.value)}
+                      className="w-full bg-background border rounded px-3 py-2 text-sm"
+                      disabled={gameState.unlockedMelodicSamples.length === 0}
+                    >
+                      <option value="">Select sample...</option>
+                      {gameState.unlockedMelodicSamples.map(sample => (
+                        <option key={sample} value={sample}>
+                          {sample.charAt(0).toUpperCase() + sample.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                    
+                    {gameState.unlockedMelodicSamples.length === 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Unlock melodic samples first
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             ) : (

@@ -19,7 +19,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **View specific diff**: `git show <commit-hash>` for specific commit changes
 
 ### Build & Development
-- **Start development server**: `npm run dev` (NOTE: Human usually runs this in hot reload, just use `echo human please check X` to request testing)
+- **Start development server**: `npm run dev` (⚠️ Usually already running in another tab - check before starting)
 - **Build for production**: `npm run build` (runs TypeScript compilation then Vite build)
 - **Preview production build**: `npm run preview`
 - **Clearing vite cache**: `rm -rf node_modules/.vite`

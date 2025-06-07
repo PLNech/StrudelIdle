@@ -4,6 +4,7 @@ import { useGame } from '../context/GameContext';
 import { Button } from './ui/button';
 import { CodeGenerator } from '../utils/codeGenerator';
 import { ALL_PHASES } from '../data/progression';
+import { generateStrudelCode } from '../utils/ast';
 
 const CurrentPattern: React.FC = () => {
   const { gameState, setActiveSample } = useGame();
@@ -76,14 +77,74 @@ const CurrentPattern: React.FC = () => {
         </div>
       )}
 
-      {/* Current Pattern Display */}
+      {/* Multi-Line Pattern Display */}
       <div className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/30 rounded-lg p-6">
-        <div className="text-center">
-          <div className="pattern-text text-xl lg:text-2xl font-mono bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
-            {gameState.strudelCode || 's("bd")'}
-          </div>
-          <div className="text-sm text-muted-foreground">
-            Current Strudel Pattern • BPM: {gameState.strudelBPM}
+        <div className="space-y-3">
+          {/* Line 1 - Drums */}
+          {gameState.soundLines.line1.enabled && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium w-16 text-red-600">Line 1:</span>
+              <div className="flex-1 font-mono text-sm bg-red-50 border border-red-200 rounded px-3 py-2">
+                {gameState.patternAST.line1 ? 
+                  generateStrudelCode(gameState.patternAST.line1, { enabledSamples: new Set(['bd', 'sd', 'hh']), availableEffects: [], maxComplexity: 10, preferredStyle: 'minimal' }) :
+                  `d1 $ s("${gameState.soundLines.line1.selectedSample || 'bd'}")`
+                }
+              </div>
+            </div>
+          )}
+          
+          {/* Line 2 - Melodic */}
+          {gameState.soundLines.line2.enabled && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium w-16 text-blue-600">Line 2:</span>
+              <div className="flex-1 font-mono text-sm bg-blue-50 border border-blue-200 rounded px-3 py-2">
+                {gameState.patternAST.line2 ? 
+                  generateStrudelCode(gameState.patternAST.line2, { enabledSamples: new Set(['piano', 'casio']), availableEffects: [], maxComplexity: 10, preferredStyle: 'minimal' }) :
+                  gameState.soundLines.line2.selectedSample ? 
+                    `d2 $ s("${gameState.soundLines.line2.selectedSample}")` :
+                    'd2 $ silence'
+                }
+              </div>
+            </div>
+          )}
+          
+          {/* Line 3 - Jazz/Harmony */}
+          {gameState.soundLines.line3.enabled && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium w-16 text-purple-600">Line 3:</span>
+              <div className="flex-1 font-mono text-sm bg-purple-50 border border-purple-200 rounded px-3 py-2">
+                {gameState.patternAST.line3 ? 
+                  generateStrudelCode(gameState.patternAST.line3, { enabledSamples: new Set(['piano']), availableEffects: [], maxComplexity: 10, preferredStyle: 'minimal' }) :
+                  gameState.soundLines.line3.selectedSample?.startsWith('jazz_') ? 
+                    `d3 $ s("piano") # note "${gameState.soundLines.line3.selectedSample.replace('jazz_', '').replace('_', ' ')}"` :
+                    gameState.soundLines.line3.selectedSample ? 
+                      `d3 $ s("${gameState.soundLines.line3.selectedSample}")` :
+                      'd3 $ silence'
+                }
+              </div>
+            </div>
+          )}
+          
+          {/* Line 4 - Bass */}
+          {gameState.soundLines.line4.enabled && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium w-16 text-green-600">Line 4:</span>
+              <div className="flex-1 font-mono text-sm bg-green-50 border border-green-200 rounded px-3 py-2">
+                {gameState.patternAST.line4 ? 
+                  generateStrudelCode(gameState.patternAST.line4, { enabledSamples: new Set(['bass']), availableEffects: [], maxComplexity: 10, preferredStyle: 'minimal' }) :
+                  gameState.soundLines.line4.selectedSample ? 
+                    `d4 $ s("${gameState.soundLines.line4.selectedSample}")` :
+                    'd4 $ silence'
+                }
+              </div>
+            </div>
+          )}
+          
+          {/* Combined Pattern Info */}
+          <div className="text-center pt-3 border-t border-primary/20">
+            <div className="text-sm text-muted-foreground">
+              {Object.values(gameState.soundLines).filter(line => line.enabled).length} active lines • BPM: {gameState.strudelBPM}
+            </div>
           </div>
         </div>
       </div>

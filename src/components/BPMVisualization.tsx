@@ -14,6 +14,12 @@ const BPMVisualization: React.FC = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    // Initialize with current BPM if history is empty
+    if (bpmHistory.length === 0) {
+      const now = Date.now();
+      setBpmHistory([{ time: now, bpm: gameState.strudelBPM }]);
+    }
+
     // Record BPM every 200ms
     intervalRef.current = setInterval(() => {
       const now = Date.now();
@@ -34,7 +40,7 @@ const BPMVisualization: React.FC = () => {
         clearInterval(intervalRef.current);
       }
     };
-  }, [gameState.strudelBPM]);
+  }, [gameState.strudelBPM, bpmHistory.length]);
 
   // Format data for chart with relative time
   const chartData = bpmHistory.map((point, index) => ({
@@ -42,12 +48,17 @@ const BPMVisualization: React.FC = () => {
     bpm: point.bpm
   }));
 
-  if (chartData.length < 2) {
+  if (chartData.length < 1) {
     return (
       <div className="h-20 bg-muted/20 rounded-lg flex items-center justify-center text-sm text-muted-foreground">
         Building BPM history...
       </div>
     );
+  }
+
+  // If we only have one data point, duplicate it to show a flat line
+  if (chartData.length === 1) {
+    chartData.push({ time: chartData[0].time + 0.2, bpm: chartData[0].bpm });
   }
 
   return (
