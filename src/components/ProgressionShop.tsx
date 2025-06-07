@@ -8,8 +8,25 @@ import SampleBankShop from './SampleBankShop';
 const ProgressionShop: React.FC = () => {
   const { gameState, purchaseFeature, purchasePhase, setActiveSample } = useGame();
   const [selectedPhase, setSelectedPhase] = useState<string>('first_sounds');
-  const [activeTab, setActiveTab] = useState<'workshop' | 'samples'>('workshop');
+  const [activeTab, setActiveTab] = useState<'upgrades' | 'samples'>('upgrades');
   const lastPlayTimeRef = React.useRef<number>(0);
+
+  // Helper function for resource emojis
+  const getResourceEmoji = (type: string) => {
+    const emojis = {
+      beats: '🎵',
+      ram: '💾',
+      cpu: '⚡',
+      dsp: '🎛️',
+      storage: '💿',
+      sound: '🔊',
+      notation: '📝',
+      effect: '🎚️',
+      pattern: '🎼',
+      advanced: '🚀'
+    };
+    return emojis[type as keyof typeof emojis] || '⚡';
+  };
 
   const getCurrentPhase = (): ProgressionPhase | undefined => {
     return ALL_PHASES.find(phase => phase.id === selectedPhase);
@@ -96,14 +113,14 @@ const ProgressionShop: React.FC = () => {
       {/* Main Tabs */}
       <div className="flex gap-2 mb-6">
         <button
-          onClick={() => setActiveTab('workshop')}
+          onClick={() => setActiveTab('upgrades')}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            activeTab === 'workshop'
+            activeTab === 'upgrades'
               ? 'bg-primary text-primary-foreground'
               : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
           }`}
         >
-          🎓 Workshop
+          ⚡ Upgrades
         </button>
         <button
           onClick={() => setActiveTab('samples')}
@@ -117,7 +134,7 @@ const ProgressionShop: React.FC = () => {
         </button>
       </div>
 
-      {activeTab === 'workshop' && (
+      {activeTab === 'upgrades' && (
         <div>
           {/* Phase Tabs */}
           <div className="flex flex-wrap gap-2 mb-6">
@@ -187,7 +204,8 @@ const ProgressionShop: React.FC = () => {
                       <div className="flex items-center gap-2 mb-2">
                         <span>{getCategoryIcon(feature.category)}</span>
                         <h5 className="font-semibold">{feature.name}</h5>
-                        <span className="text-xs bg-background/50 px-2 py-1 rounded-full">
+                        <span className="text-xs bg-background/50 px-2 py-1 rounded-full flex items-center gap-1">
+                          {getResourceEmoji(feature.category)}
                           {feature.category}
                         </span>
                         {isFeatureUnlocked(feature.id) && (
@@ -215,14 +233,25 @@ const ProgressionShop: React.FC = () => {
                       {feature.example && (
                         <div className="mt-2 text-xs text-muted-foreground">
                           <span className="font-medium">Example: </span>
-                          <code className="bg-background/20 px-1 rounded">{feature.example}</code>
+                          <button
+                            onClick={() => isFeatureUnlocked(feature.id) && handleSyntaxClick(feature.example!)}
+                            disabled={!isFeatureUnlocked(feature.id)}
+                            className={`bg-background/20 px-1 rounded font-mono transition-colors ${
+                              isFeatureUnlocked(feature.id) 
+                                ? 'hover:bg-background/40 cursor-pointer' 
+                                : 'cursor-not-allowed opacity-50'
+                            }`}
+                            title={isFeatureUnlocked(feature.id) ? 'Click to set as current pattern' : 'Unlock this feature first'}
+                          >
+                            {feature.example}
+                          </button>
                         </div>
                       )}
                     </div>
                     
                     <div className="ml-4 text-right">
-                      <div className="text-sm font-semibold mb-2">
-                        {feature.cost} Beats
+                      <div className="text-sm font-semibold mb-2 flex items-center gap-1">
+                        {getResourceEmoji('beats')} {feature.cost}
                       </div>
                       <Button
                         onClick={() => handlePurchaseFeature(feature)}

@@ -57,7 +57,7 @@ export const useSimpleAudio = () => {
   }, [initAudioContext]);
 
   // Create a simple kick drum sound programmatically with rate limiting
-  const playKick = useCallback(async () => {
+  const playKick = useCallback(async (volume: number = 0.8) => {
     const now = Date.now();
     // Rate limit to maximum 1 play per 50ms (20Hz max)
     if (now - lastPlayTimeRef.current < 50) {
@@ -76,7 +76,7 @@ export const useSimpleAudio = () => {
       oscillator.frequency.setValueAtTime(60, audioContext.currentTime);
       oscillator.frequency.exponentialRampToValueAtTime(30, audioContext.currentTime + 0.1);
       
-      gainNode.gain.setValueAtTime(0.8, audioContext.currentTime);
+      gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
       
       filterNode.type = 'lowpass';

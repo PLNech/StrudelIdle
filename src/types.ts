@@ -94,12 +94,19 @@ export interface GameState {
     generationInterval: number;
     lastGeneration: number;
     complexity: number; // 0-1
+    pausedUntil?: number; // Timestamp when auto-generation should resume
   };
   // Sample banks system
   sampleBanks: {
     unlockedBanks: string[]; // List of unlocked sample bank IDs
     bankVariants: { [bankId: string]: number[] }; // Unlocked variant indices per bank
     totalSamplesUnlocked: number; // Progress metric
+  };
+  // BPM upgrade system
+  bpmUpgrades: {
+    unlockedBPMs: number[]; // Available discrete BPM values
+    hasSlider: boolean; // Whether fine slider control is unlocked
+    sliderCost: number; // Cost for slider upgrade
   };
 }
 
@@ -143,5 +150,11 @@ export const INITIAL_GAME_STATE: GameState = {
       'bd': [0] // Only first variant of bd unlocked
     },
     totalSamplesUnlocked: 1
+  },
+  // BPM upgrade system
+  bpmUpgrades: {
+    unlockedBPMs: [60], // Start with only 60 BPM
+    hasSlider: false, // No slider control initially
+    sliderCost: 2000 // Expensive slider upgrade
   },
 };

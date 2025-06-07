@@ -1,0 +1,82 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f0f23"/>
+      <stop offset="50%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#16213e"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="50%" style="stop-color:#8b5cf6"/>
+      <stop offset="100%" style="stop-color:#06b6d4"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  
+  <!-- Grid pattern -->
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ffffff" stroke-width="0.5" opacity="0.1"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  
+  <!-- Waveform visualization -->
+  <g opacity="0.3">
+    <path d="M50 200 Q150 150 250 200 T450 200 T650 200 T850 200 T1050 200" 
+          stroke="url(#accent)" stroke-width="3" fill="none"/>
+    <path d="M50 250 Q150 300 250 250 T450 250 T650 250 T850 250 T1050 250" 
+          stroke="url(#accent)" stroke-width="2" fill="none"/>
+    <path d="M50 320 Q150 280 250 320 T450 320 T650 320 T850 320 T1050 320" 
+          stroke="url(#accent)" stroke-width="2" fill="none"/>
+  </g>
+  
+  <!-- Floating musical notes -->
+  <text x="900" y="150" font-family="monospace" font-size="24" fill="#6366f1" opacity="0.7">♪</text>
+  <text x="1050" y="180" font-family="monospace" font-size="18" fill="#8b5cf6" opacity="0.6">♫</text>
+  <text x="850" y="120" font-family="monospace" font-size="20" fill="#06b6d4" opacity="0.8">♪</text>
+  <text x="950" y="100" font-family="monospace" font-size="16" fill="#6366f1" opacity="0.5">♫</text>
+  
+  <!-- Code snippet -->
+  <rect x="50" y="380" width="600" height="180" rx="10" fill="#1e293b" stroke="#475569" stroke-width="1" opacity="0.8"/>
+  <text x="70" y="410" font-family="monospace" font-size="14" fill="#64748b">// Live coding meets idle gaming</text>
+  <text x="70" y="430" font-family="monospace" font-size="16" fill="#f1f5f9">s("bd hh sd hh")</text>
+  <text x="70" y="450" font-family="monospace" font-size="16" fill="#f1f5f9">.fast(2)</text>
+  <text x="70" y="470" font-family="monospace" font-size="16" fill="#f1f5f9">.gain(0.8)</text>
+  <text x="70" y="510" font-family="monospace" font-size="12" fill="#94a3b8">🎵 BPM: 140  •  Beats: 15,420</text>
+  <text x="70" y="530" font-family="monospace" font-size="12" fill="#94a3b8">🔊 Modules: 12 active</text>
+  
+  <!-- Main title -->
+  <text x="600" y="350" font-family="monospace" font-size="72" font-weight="bold" 
+        fill="url(#accent)" text-anchor="middle">StrudelIdle</text>
+  
+  <!-- Tagline -->
+  <text x="600" y="390" font-family="monospace" font-size="24" 
+        fill="#e2e8f0" text-anchor="middle" opacity="0.9">Incremental AlgoRave</text>
+  
+  <!-- Sub-tagline -->
+  <text x="600" y="420" font-family="monospace" font-size="16" 
+        fill="#94a3b8" text-anchor="middle">Click beats • Buy modules • Generate live code</text>
+  
+  <!-- Beat visualization -->
+  <g transform="translate(750, 450)">
+    <circle cx="0" cy="0" r="25" fill="#6366f1" opacity="0.8">
+      <animate attributeName="r" values="25;30;25" dur="1s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="50" cy="0" r="20" fill="#8b5cf6" opacity="0.6">
+      <animate attributeName="r" values="20;25;20" dur="1.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="100" cy="0" r="25" fill="#06b6d4" opacity="0.8">
+      <animate attributeName="r" values="25;30;25" dur="0.8s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="150" cy="0" r="20" fill="#6366f1" opacity="0.6">
+      <animate attributeName="r" values="20;25;20" dur="1.1s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  
+  <!-- Powered by Strudel -->
+  <text x="600" y="580" font-family="monospace" font-size="14" 
+        fill="#64748b" text-anchor="middle">Powered by Strudel.cc • Made with ❤️</text>
+</svg>

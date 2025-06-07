@@ -51,16 +51,33 @@ const playStrudelPattern = (code: string, bpm: number) => {
     // Stop any existing patterns first
     (window as any).hush?.();
     
-    // Set BPM if available
+    // Set BPM using multiple methods to ensure it takes effect
     if ((window as any).setBpm) {
       (window as any).setBpm(bpm);
     }
     
+    // Alternative BPM setting methods
+    if ((window as any).setcps) {
+      (window as any).setcps(bpm / 60); // Convert BPM to cycles per second
+    }
+    
+    // Set tempo using Tonal.js if available
+    if ((window as any).Tempo && (window as any).Tempo.bpm) {
+      (window as any).Tempo.bpm = bpm;
+    }
+    
     console.log(`Playing Strudel pattern: ${code} at ${bpm} BPM`);
+    
+    // Set BPM again right before evaluating pattern
+    if ((window as any).setcps) {
+      (window as any).setcps(bpm / 60);
+    }
     
     // Evaluate the pattern using global evaluate function
     if ((window as any).evaluate) {
-      (window as any).evaluate(code);
+      // Try setting tempo inline with the pattern as well
+      const patternWithBPM = `setcps(${bpm / 60}); ${code}`;
+      (window as any).evaluate(patternWithBPM);
     } else {
       console.warn('Strudel evaluate function not available');
     }

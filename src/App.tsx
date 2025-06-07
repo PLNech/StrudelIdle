@@ -14,6 +14,8 @@ import AchievementsDisplay from './components/AchievementsDisplay';
 import Settings from './components/Settings';
 import AchievementNotification from './components/AchievementNotification';
 import PatternBuilder from './components/PatternBuilder';
+import CurrentPattern from './components/CurrentPattern';
+import BPMUpgrades from './components/BPMUpgrades';
 import { useGame } from './context/GameContext';
 import { useAchievementNotifications } from './hooks/useAchievementNotifications';
 
@@ -42,6 +44,13 @@ const GameContent: React.FC = () => {
         </div>
       </header>
 
+      {/* Current Pattern - Above the fold */}
+      <div className="bg-gradient-to-br from-card to-card/80 border-b border-border/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <CurrentPattern />
+        </div>
+      </div>
+
       {/* Main Content */}
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 w-full max-w-[1400px] mx-auto">
@@ -55,6 +64,9 @@ const GameContent: React.FC = () => {
             </div>
             <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
               <StrudelOutput />
+            </div>
+            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+              <BPMUpgrades />
             </div>
             <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
               <PatternBuilder />

@@ -1,5 +1,5 @@
 // src/context/GameContext.tsx
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { GameState, INITIAL_GAME_STATE, Module, NewsItem } from '../types';
 import { STRUDEL_MODULES } from '../data/strudelModules';
 import { SAMPLE_BANKS, getSampleUnlockProgression } from '../data/sampleScanner';
@@ -35,6 +35,10 @@ interface GameContextType {
   purchaseSampleBank: (bankId: string) => void;
   purchaseSampleVariant: (bankId: string, variantIndex: number) => void;
   setActiveSample: (sample: string) => void;
+  // BPM upgrades
+  purchaseBPMUpgrade: (bpm: number) => void;
+  purchaseBPMSlider: () => void;
+  setBPM: (bpm: number) => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -68,14 +72,25 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   });
 
+  // Counter to ensure unique news item IDs
+  const newsCounterRef = useRef(0);
+  
+  // Queue for news messages to avoid calling addNews from within setGameState
+  const newsQueueRef = useRef<string[]>([]);
+
   // Memoize addNews as it's used internally by effects and callbacks
   const addNews = useCallback((message: string) => {
     setGameState(prevState => {
-      const newNewsItem: NewsItem = { id: Date.now().toString(), message, timestamp: Date.now() };
+      newsCounterRef.current += 1;
+      const newNewsItem: NewsItem = { 
+        id: `${Date.now()}-${newsCounterRef.current}`, 
+        message, 
+        timestamp: Date.now() 
+      };
       const updatedNewsFeed = [newNewsItem, ...prevState.newsFeed].slice(0, 10); // Keep last 10 items
       return { ...prevState, newsFeed: updatedNewsFeed };
     });
-  }, []); // No dependencies as it only uses prevState and Date.now()
+  }, []); // No dependencies as it only uses prevState and counter ref
 
   // --- Game Loop Logic ---
   useEffect(() => {
@@ -292,8 +307,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 // This call to addNews won't cause an infinite loop because it schedules a new state update,
                 // it doesn't modify prevState directly.
                 // However, for strictness within a setState, it's better to update newsfeed directly.
-                // For MVP, this direct addNews call is acceptable and simpler.
-                addNews(`WARNING: ${msg} Beats generation reduced.`);
+                // Queue the news message instead of calling addNews directly
+                newsQueueRef.current.push(`WARNING: ${msg} Beats generation reduced.`);
             }
         });
         currentBPS *= overloadPenalty;
@@ -305,10 +320,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let finalStrudelCode = currentStrudelCode;
         let updatedCodeOMatic = prevState.codeOMatic;
         
-        if (prevState.codeOMatic.purchased && prevState.codeOMatic.enabled) {
-          const timeSinceLastGeneration = (Date.now() - prevState.codeOMatic.lastGeneration) / 1000;
+        if (prevState.codeOMatic?.purchased && prevState.codeOMatic?.enabled) {
+          const now = Date.now();
+          const timeSinceLastGeneration = (now - prevState.codeOMatic.lastGeneration) / 1000;
+          const isPaused = prevState.codeOMatic.pausedUntil && now < prevState.codeOMatic.pausedUntil;
           
-          if (timeSinceLastGeneration >= prevState.codeOMatic.generationInterval) {
+          if (timeSinceLastGeneration >= prevState.codeOMatic.generationInterval && !isPaused) {
             try {
               const codeGenerator = new CodeGenerator();
               const unlockedFeatures = ALL_PHASES
@@ -328,7 +345,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 lastGeneration: Date.now()
               };
               
-              console.log('Code-o-matic generated:', finalStrudelCode);
+              console.log('🤖 Code-o-matic generated NEW pattern:', finalStrudelCode);
+              console.log('🤖 Replacing current code:', currentStrudelCode);
             } catch (error) {
               console.error('Code-o-matic generation error:', error);
             }
@@ -488,7 +506,20 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [addNews]); // addNews needs to be a dependency for the useEffect if used inside setGameState callback.
+  }, []); // Remove addNews dependency to break the infinite loop
+  
+  // Process queued news messages after state updates
+  useEffect(() => {
+    if (newsQueueRef.current.length > 0) {
+      const messages = [...newsQueueRef.current];
+      newsQueueRef.current = []; // Clear the queue
+      
+      // Add all queued messages
+      messages.forEach(message => {
+        addNews(message);
+      });
+    }
+  }, [gameState.beats, addNews]); // Trigger when beats change (indicating game loop ran)
 
   // --- State Modifiers ---
   const addBeats = useCallback((amount: number) => {
@@ -728,9 +759,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [addNews]);
 
   const setActiveSample = useCallback((sample: string) => {
+    console.log('🎵 setActiveSample called with:', sample);
     setGameState(prevState => {
+      console.log('🎵 Current code before change:', prevState.strudelCode);
+      
       // If it's a Strudel pattern/syntax (contains parentheses), use as-is
       if (sample.includes('(') && sample.includes(')')) {
+        console.log('🎵 Setting full pattern:', sample);
         return {
           ...prevState,
           strudelCode: sample,
@@ -740,22 +775,90 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Otherwise treat as sample name and replace existing samples
       let newCode = prevState.strudelCode;
       
-      // If current code contains bd, replace all bd with the new sample
-      if (newCode.includes('bd') && sample.includes(':')) {
-        const baseSample = sample.split(':')[0];
-        if (baseSample === 'bd') {
-          // Replace all bd occurrences with the new variant
-          newCode = newCode.replace(/bd(?::\d+)?/g, sample);
-        }
+      // Extract base sample name (before :)
+      const baseSample = sample.includes(':') ? sample.split(':')[0] : sample;
+      console.log('🎵 Base sample:', baseSample, 'Full sample:', sample);
+      
+      // If current code contains the base sample, replace all variants with the new one
+      if (newCode.includes(baseSample)) {
+        // Replace all occurrences of baseSample (with or without variants)
+        const regex = new RegExp(`${baseSample}(?::\\d+)?`, 'g');
+        newCode = newCode.replace(regex, sample);
+        console.log('🎵 Replaced in existing code. New code:', newCode);
       } else {
         // Default to setting new pattern
         newCode = `s("${sample}")`;
+        console.log('🎵 Set new pattern:', newCode);
       }
       
-      return {
+      const result = {
         ...prevState,
         strudelCode: newCode,
+        // Pause Code-o-matic for 10 seconds to prevent overriding manual selections
+        codeOMatic: {
+          ...prevState.codeOMatic,
+          pausedUntil: Date.now() + 10000, // 10 seconds pause
+        },
       };
+      
+      console.log('🎵 Final result code:', result.strudelCode);
+      return result;
+    });
+  }, []);
+
+  // BPM upgrade functions
+  const purchaseBPMUpgrade = useCallback((bpm: number) => {
+    setGameState(prevState => {
+      // Calculate cost based on BPM (higher BPMs cost more)
+      const baseCost = 100;
+      const bpmCostMultiplier = Math.pow(1.5, Math.floor((bpm - 60) / 10));
+      const cost = Math.floor(baseCost * bpmCostMultiplier);
+      
+      if (prevState.beats >= cost && !prevState.bpmUpgrades.unlockedBPMs.includes(bpm)) {
+        addNews(`🎵 BPM ${bpm} unlocked!`);
+        return {
+          ...prevState,
+          beats: prevState.beats - cost,
+          bpmUpgrades: {
+            ...prevState.bpmUpgrades,
+            unlockedBPMs: [...prevState.bpmUpgrades.unlockedBPMs, bpm].sort((a, b) => a - b),
+          },
+        };
+      }
+      return prevState;
+    });
+  }, [addNews]);
+
+  const purchaseBPMSlider = useCallback(() => {
+    setGameState(prevState => {
+      if (prevState.beats >= prevState.bpmUpgrades.sliderCost && !prevState.bpmUpgrades.hasSlider) {
+        addNews(`🎛️ BPM Slider unlocked! Full tempo control available.`);
+        return {
+          ...prevState,
+          beats: prevState.beats - prevState.bpmUpgrades.sliderCost,
+          bpmUpgrades: {
+            ...prevState.bpmUpgrades,
+            hasSlider: true,
+          },
+        };
+      }
+      return prevState;
+    });
+  }, [addNews]);
+
+  const setBPM = useCallback((bpm: number) => {
+    setGameState(prevState => {
+      // Only allow setting BPM if it's unlocked or slider is available
+      const canSetBPM = prevState.bpmUpgrades.hasSlider || 
+                       prevState.bpmUpgrades.unlockedBPMs.includes(bpm);
+      
+      if (canSetBPM) {
+        return {
+          ...prevState,
+          strudelBPM: Math.max(60, Math.min(180, bpm)), // Clamp to valid range
+        };
+      }
+      return prevState;
     });
   }, []);
 
@@ -777,7 +880,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     purchaseSampleBank,
     purchaseSampleVariant,
     setActiveSample,
-  }), [gameState, setGameState, addBeats, purchaseModule, purchaseHardware, addNews, purchasePhase, purchaseFeature, purchaseCodeOMatic, toggleCodeOMatic, setCodeOMaticComplexity, purchaseSampleBank, purchaseSampleVariant, setActiveSample]);
+    // BPM upgrades
+    purchaseBPMUpgrade,
+    purchaseBPMSlider,
+    setBPM,
+  }), [gameState, setGameState, addBeats, purchaseModule, purchaseHardware, addNews, purchasePhase, purchaseFeature, purchaseCodeOMatic, toggleCodeOMatic, setCodeOMaticComplexity, purchaseSampleBank, purchaseSampleVariant, setActiveSample, purchaseBPMUpgrade, purchaseBPMSlider, setBPM]);
 
   return (
     <GameContext.Provider value={contextValue}>

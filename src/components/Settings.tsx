@@ -8,6 +8,8 @@ const Settings: React.FC = () => {
   const { gameState, setGameState } = useGame();
   const { saveGame, exportSave, importSave, resetGame } = useSaveGame(gameState, setGameState);
   const [isOpen, setIsOpen] = useState(false);
+  const [manualVolume, setManualVolume] = useState(0.8);
+  const [algoraveVolume, setAlgoraveVolume] = useState(0.6);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImport = () => {
@@ -35,6 +37,7 @@ const Settings: React.FC = () => {
         onClick={() => setIsOpen(true)}
         className="fixed top-4 right-4 z-50"
         variant="outline"
+        data-testid="settings-button"
       >
         ⚙️ Settings
       </Button>
@@ -88,12 +91,42 @@ const Settings: React.FC = () => {
 
         {/* Audio Settings */}
         <div className="space-y-3 mb-6">
-          <h3 className="text-lg font-semibold">Audio</h3>
-          <div className="text-sm text-muted-foreground">
-            Current BPM: {gameState.strudelBPM}
+          <h3 className="text-lg font-semibold">Audio Settings</h3>
+          
+          {/* Manual Volume */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Manual Volume: {Math.round(manualVolume * 100)}%
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={manualVolume}
+              onChange={(e) => setManualVolume(parseFloat(e.target.value))}
+              className="w-full"
+            />
           </div>
-          <div className="text-sm text-muted-foreground">
-            Strudel Code: {gameState.strudelCode.split('\n').length} pattern(s)
+
+          {/* AlgoRave Volume */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              AlgoRave Volume: {Math.round(algoraveVolume * 100)}%
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={algoraveVolume}
+              onChange={(e) => setAlgoraveVolume(parseFloat(e.target.value))}
+              className="w-full"
+            />
+          </div>
+
+          <div className="text-sm text-muted-foreground pt-2">
+            Current BPM: {gameState.strudelBPM} • Pattern: {gameState.strudelCode.length} chars
           </div>
         </div>
 

@@ -18,9 +18,8 @@ const PatternBuilder: React.FC = () => {
         <div className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 p-4 rounded-lg font-mono text-sm">
           <pre className="whitespace-pre-wrap text-foreground">{gameState.strudelCode}</pre>
         </div>
-        <div className="flex items-center justify-between text-xs text-muted-foreground mt-2 px-1">
+        <div className="flex items-center justify-center text-xs text-muted-foreground mt-2 px-1">
           <span>BPM: {gameState.strudelBPM}</span>
-          <span>Looping: {gameState.hasLooping ? '🔄 ON' : '⏸️ OFF'}</span>
         </div>
       </div>
 

@@ -154,9 +154,24 @@ const SampleBankShop: React.FC = () => {
               {/* Variants */}
               {isUnlocked && (
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground">
-                    Variants ({unlockedVariants.length}/{bank.variantCount})
-                  </h4>
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium text-foreground">
+                      Variants ({unlockedVariants.length}/{bank.variantCount})
+                    </h4>
+                    {/* Show current variant */}
+                    {(() => {
+                      const currentMatch = gameState.strudelCode.match(new RegExp(`${bank.id}(?::(\\d+))?`));
+                      if (currentMatch) {
+                        const currentVariant = currentMatch[1] ? parseInt(currentMatch[1]) : 0;
+                        return (
+                          <span className="text-xs text-primary font-medium">
+                            Current: {currentVariant}
+                          </span>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
                   <div className="grid grid-cols-6 gap-1">
                     {bank.variants.slice(0, 12).map((variant) => {
                       const isVariantUnlocked = unlockedVariants.includes(variant.index);
@@ -173,7 +188,9 @@ const SampleBankShop: React.FC = () => {
                           disabled={!isVariantUnlocked && !canAffordVariant}
                           className={`w-8 h-8 text-xs rounded border transition-colors ${
                             isVariantUnlocked
-                              ? 'bg-green-500/20 border-green-500/50 text-green-200 hover:bg-green-500/30'
+                              ? (gameState.strudelCode.includes(variant.index === 0 ? bank.id : `${bank.id}:${variant.index}`))
+                                ? 'bg-primary border-primary text-primary-foreground font-bold' // Currently active
+                                : 'bg-green-500/20 border-green-500/50 text-green-200 hover:bg-green-500/30'
                               : canAffordVariant
                               ? 'bg-muted/20 border-border hover:bg-muted/40 text-muted-foreground'
                               : 'bg-muted/10 border-muted/30 text-muted/50 cursor-not-allowed'

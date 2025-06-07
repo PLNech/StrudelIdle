@@ -1,9 +1,35 @@
 // src/hooks/useSaveGame.ts
 import { useEffect, useCallback } from 'react';
-import { GameState } from '../types';
+import { GameState, INITIAL_GAME_STATE } from '../types';
 
 const SAVE_KEY = 'algorave-idle-save';
 const AUTO_SAVE_INTERVAL = 30000; // 30 seconds
+
+// Migration function to handle saves from older versions
+const migrateSaveData = (savedData: any): GameState => {
+  // Ensure all required fields exist, using INITIAL_GAME_STATE as defaults
+  const migratedData: GameState = {
+    ...INITIAL_GAME_STATE,
+    ...savedData,
+    // Ensure codeOMatic exists
+    codeOMatic: {
+      ...INITIAL_GAME_STATE.codeOMatic,
+      ...savedData.codeOMatic,
+    },
+    // Ensure bpmUpgrades exists
+    bpmUpgrades: {
+      ...INITIAL_GAME_STATE.bpmUpgrades,
+      ...savedData.bpmUpgrades,
+    },
+    // Ensure sampleBanks exists
+    sampleBanks: {
+      ...INITIAL_GAME_STATE.sampleBanks,
+      ...savedData.sampleBanks,
+    },
+  };
+  
+  return migratedData;
+};
 
 export const useSaveGame = (gameState: GameState, setGameState: (state: GameState) => void) => {
   // Auto-save every 30 seconds
@@ -49,10 +75,13 @@ export const useSaveGame = (gameState: GameState, setGameState: (state: GameStat
         const maxOfflineTime = 24 * 60 * 60; // 24 hours in seconds
         const cappedOfflineBeats = Math.min(offlineBeats, parsedData.bps * maxOfflineTime);
         
+        // Migrate the data to ensure all fields exist
+        const migratedData = migrateSaveData(parsedData);
+        
         const loadedState = {
-          ...parsedData,
-          beats: parsedData.beats + cappedOfflineBeats,
-          gameTime: parsedData.gameTime + Math.min(timeDiff, maxOfflineTime),
+          ...migratedData,
+          beats: migratedData.beats + cappedOfflineBeats,
+          gameTime: migratedData.gameTime + Math.min(timeDiff, maxOfflineTime),
         };
         
         setGameState(loadedState);
@@ -85,7 +114,8 @@ export const useSaveGame = (gameState: GameState, setGameState: (state: GameStat
     reader.onload = (e) => {
       try {
         const saveData = JSON.parse(e.target?.result as string);
-        setGameState(saveData);
+        const migratedData = migrateSaveData(saveData);
+        setGameState(migratedData);
         console.log('Save imported successfully');
       } catch (error) {
         console.error('Failed to import save:', error);

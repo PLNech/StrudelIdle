@@ -41,6 +41,20 @@ const StrudelOutput: React.FC = () => {
     }
   }, [enhancedPattern, isPlaying, strudelReady]);
 
+  // Clear draw effects when switching to code-only mode
+  useEffect(() => {
+    if (visualMode === 'code' && isPlaying && strudelReady) {
+      try {
+        // Clear any existing draw visualizations
+        if ((window as any).clearDraws) {
+          (window as any).clearDraws();
+        }
+      } catch (error) {
+        console.error('Error clearing draws:', error);
+      }
+    }
+  }, [visualMode, isPlaying, strudelReady]);
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
@@ -56,15 +70,18 @@ const StrudelOutput: React.FC = () => {
           >
             {showDebug ? 'Hide Debug' : 'Debug'}
           </Button>
-          <select 
-            value={visualMode} 
-            onChange={(e) => setVisualMode(e.target.value as any)}
-            className="text-sm bg-background border rounded px-2 py-1"
-          >
-            <option value="code">Code Only</option>
-            <option value="punchcard">Punchcard</option>
-            <option value="pianoroll">Piano Roll</option>
-          </select>
+          {/* Only show visualization controls if unlocked */}
+          {(gameState.unlockedFeatures.includes('visualization') || gameState.beats > 2000) && (
+            <select 
+              value={visualMode} 
+              onChange={(e) => setVisualMode(e.target.value as any)}
+              className="text-sm bg-background border rounded px-2 py-1"
+            >
+              <option value="code">Code Only</option>
+              <option value="punchcard">Punchcard</option>
+              <option value="pianoroll">Piano Roll</option>
+            </select>
+          )}
         </div>
       </div>
       
@@ -133,25 +150,6 @@ const StrudelOutput: React.FC = () => {
           Click "Start AlgoRave" to enable audio.
         </p>
       )}
-      
-      {/* BPM Control */}
-      <div className="mt-3 flex items-center gap-2">
-        <label className="text-sm font-medium">BPM:</label>
-        <input
-          type="range"
-          min="60"
-          max="180"
-          value={gameState.strudelBPM}
-          onChange={(e) => {
-            // We'll need to add this to the game context
-            if ((window as any).setBpm) {
-              (window as any).setBpm(parseInt(e.target.value));
-            }
-          }}
-          className="flex-1"
-        />
-        <span className="text-sm w-8">{gameState.strudelBPM}</span>
-      </div>
     </div>
   );
 };

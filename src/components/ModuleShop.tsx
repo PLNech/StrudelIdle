@@ -8,6 +8,18 @@ import { Module } from '../types';
 const ModuleShop: React.FC = () => {
   const { gameState, purchaseModule } = useGame();
 
+  // Helper function for resource emojis
+  const getResourceEmoji = (type: string) => {
+    const emojis = {
+      ram: '💾',
+      cpu: '⚡',
+      dsp: '🎛️',
+      storage: '💿',
+      beats: '🎵'
+    };
+    return emojis[type as keyof typeof emojis] || '⚡';
+  };
+
   const availableModules = Object.values(gameState.modules).filter(module => module.unlocked);
 
   const getModuleStatus = (module: Module) => {
@@ -57,12 +69,26 @@ const ModuleShop: React.FC = () => {
               <p className="text-sm text-muted-foreground">{module.description}</p>
               <p className="text-sm mt-1">Owned: {module.acquiredCount}</p>
               <p className="text-sm">Generates: {module.type === 'effect' ? 'N/A (Effect)' : `${currentBPS.toFixed(2)} BPS`}</p>
-              <p className="text-sm text-yellow-500">Cost: {cost.toFixed(0)} Beats</p>
-              <div className="text-xs text-muted-foreground mt-1">
-                <p>RAM: {module.consumption.ram}MB</p>
-                <p>CPU: {module.consumption.cpu} cores</p>
-                {module.consumption.dsp > 0 && <p>DSP: {module.consumption.dsp} units</p>}
-                {module.consumption.storage > 0 && <p>Storage: {module.consumption.storage}GB</p>}
+              <p className="text-sm text-yellow-500 flex items-center gap-1">
+                {getResourceEmoji('beats')} Cost: {cost.toFixed(0)}
+              </p>
+              <div className="text-xs text-muted-foreground mt-1 space-y-1">
+                <p className="flex items-center gap-1">
+                  {getResourceEmoji('ram')} RAM: {module.consumption.ram}MB
+                </p>
+                <p className="flex items-center gap-1">
+                  {getResourceEmoji('cpu')} CPU: {module.consumption.cpu} cores
+                </p>
+                {module.consumption.dsp > 0 && (
+                  <p className="flex items-center gap-1">
+                    {getResourceEmoji('dsp')} DSP: {module.consumption.dsp} units
+                  </p>
+                )}
+                {module.consumption.storage > 0 && (
+                  <p className="flex items-center gap-1">
+                    {getResourceEmoji('storage')} Storage: {module.consumption.storage}GB
+                  </p>
+                )}
               </div>
               <Button
                 onClick={() => purchaseModule(module.id)}

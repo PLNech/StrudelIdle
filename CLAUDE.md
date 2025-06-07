@@ -4,6 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
+### Common React Issues
+- **Avoid duplicate keys**: Never use `Date.now()` alone as React keys - multiple items created simultaneously will have the same timestamp. Use `${Date.now()}-${counter}` or UUID for unique keys.
+- **Use stable references**: Prefer `useRef` for counters and `useCallback`/`useMemo` for functions passed to child components.
+
+### Game Design Principles
+- **Progressive UI Revealing**: Hide UI controls until they are unlocked/relevant to maintain focus and prevent overwhelming users. Start with minimal interface and progressively reveal complexity as players advance. Controls should appear when their underlying systems become available.
+- **Visual Feedback**: Always provide clear visual feedback for user actions, especially state changes like variant selection or upgrades.
+
 ### Git & Version Control
 - **Check differences**: `git diff` to see changes
 - **View commit history**: `git log --oneline` for recent commits  
@@ -11,7 +19,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **View specific diff**: `git show <commit-hash>` for specific commit changes
 
 ### Build & Development
-- **Start development server**: `npm run dev`
+- **Start development server**: `npm run dev` (NOTE: Human usually runs this in hot reload, just use `echo human please check X` to request testing)
 - **Build for production**: `npm run build` (runs TypeScript compilation then Vite build)
 - **Preview production build**: `npm run preview`
 - **Clearing vite cache**: `rm -rf node_modules/.vite`
