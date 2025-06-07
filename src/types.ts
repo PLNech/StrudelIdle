@@ -95,6 +95,12 @@ export interface GameState {
     lastGeneration: number;
     complexity: number; // 0-1
   };
+  // Sample banks system
+  sampleBanks: {
+    unlockedBanks: string[]; // List of unlocked sample bank IDs
+    bankVariants: { [bankId: string]: number[] }; // Unlocked variant indices per bank
+    totalSamplesUnlocked: number; // Progress metric
+  };
 }
 
 // Initial game state for a new game
@@ -129,5 +135,13 @@ export const INITIAL_GAME_STATE: GameState = {
     generationInterval: 10,
     lastGeneration: 0,
     complexity: 0.3 // Start with moderate complexity
+  },
+  // Sample banks system
+  sampleBanks: {
+    unlockedBanks: ['bd'], // Start with basic bass drum
+    bankVariants: {
+      'bd': [0] // Only first variant of bd unlocked
+    },
+    totalSamplesUnlocked: 1
   },
 };

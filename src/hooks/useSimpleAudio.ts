@@ -4,6 +4,7 @@ import { useRef, useCallback } from 'react';
 export const useSimpleAudio = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const samplesRef = useRef<{ [key: string]: AudioBuffer }>({});
+  const lastPlayTimeRef = useRef<number>(0);
 
   const initAudioContext = useCallback(async () => {
     if (!audioContextRef.current) {
@@ -55,8 +56,15 @@ export const useSimpleAudio = () => {
     }
   }, [initAudioContext]);
 
-  // Create a simple kick drum sound programmatically
+  // Create a simple kick drum sound programmatically with rate limiting
   const playKick = useCallback(async () => {
+    const now = Date.now();
+    // Rate limit to maximum 1 play per 50ms (20Hz max)
+    if (now - lastPlayTimeRef.current < 50) {
+      return;
+    }
+    lastPlayTimeRef.current = now;
+    
     const audioContext = await initAudioContext();
     
     try {

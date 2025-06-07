@@ -3,10 +3,12 @@ import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { Button } from './ui/button';
 import { ALL_PHASES, ProgressionPhase, ProgressionFeature } from '../data/progression';
+import SampleBankShop from './SampleBankShop';
 
 const ProgressionShop: React.FC = () => {
   const { gameState, purchaseFeature, purchasePhase } = useGame();
   const [selectedPhase, setSelectedPhase] = useState<string>('first_sounds');
+  const [activeTab, setActiveTab] = useState<'workshop' | 'samples'>('workshop');
 
   const getCurrentPhase = (): ProgressionPhase | undefined => {
     return ALL_PHASES.find(phase => phase.id === selectedPhase);
@@ -77,11 +79,37 @@ const ProgressionShop: React.FC = () => {
     <div className="p-6">
       <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
         <span className="text-2xl">🎓</span>
-        Strudel.cc Workshop
+        Learning & Samples
       </h2>
 
-      {/* Phase Tabs */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      {/* Main Tabs */}
+      <div className="flex gap-2 mb-6">
+        <button
+          onClick={() => setActiveTab('workshop')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            activeTab === 'workshop'
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
+          }`}
+        >
+          🎓 Workshop
+        </button>
+        <button
+          onClick={() => setActiveTab('samples')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            activeTab === 'samples'
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
+          }`}
+        >
+          🎵 Sample Banks
+        </button>
+      </div>
+
+      {activeTab === 'workshop' ? (
+        <div>
+          {/* Phase Tabs */}
+          <div className="flex flex-wrap gap-2 mb-6">
         {ALL_PHASES.map((phase) => (
           <button
             key={phase.id}
@@ -191,6 +219,8 @@ const ProgressionShop: React.FC = () => {
             </div>
           )}
         </div>
+      ) : (
+        <SampleBankShop />
       )}
     </div>
   );

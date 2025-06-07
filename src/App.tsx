@@ -25,17 +25,19 @@ const GameContent: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/5 text-foreground">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">🎵</span>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="text-center">
+            <div className="flex items-center justify-center space-x-4 mb-2">
+              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-sm">🎵</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+                StrudelIdle
+              </h1>
             </div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-              AlgoRave IDLE
-            </h1>
-          </div>
-          <div className="text-sm text-muted-foreground hidden sm:block">
-            Real-time live coding • Powered by Strudel.cc
+            <div className="text-sm text-muted-foreground">
+              Real-time live coding • Powered by Strudel.cc
+            </div>
           </div>
         </div>
       </header>
@@ -93,7 +95,7 @@ const GameContent: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-center justify-between text-sm text-muted-foreground">
             <div className="flex items-center space-x-2 mb-2 sm:mb-0">
               <span>🎮</span>
-              <span>AlgoRave IDLE</span>
+              <span>StrudelIdle</span>
               <span className="text-border">•</span>
               <span>Educational Music Game</span>
             </div>

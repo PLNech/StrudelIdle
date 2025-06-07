@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { GameState, INITIAL_GAME_STATE, Module, NewsItem } from '../types';
 import { STRUDEL_MODULES } from '../data/strudelModules';
+import { SAMPLE_BANKS, getSampleUnlockProgression } from '../data/sampleScanner';
 
 // Utility functions for Strudel modules
 function getModuleCost(module: Module): number {
@@ -30,6 +31,10 @@ interface GameContextType {
   purchaseCodeOMatic: () => void;
   toggleCodeOMatic: () => void;
   setCodeOMaticComplexity: (complexity: number) => void;
+  // Sample banks
+  purchaseSampleBank: (bankId: string) => void;
+  purchaseSampleVariant: (bankId: string, variantIndex: number) => void;
+  setActiveSample: (sample: string) => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -312,7 +317,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               
               const generationContext = {
                 unlockedFeatures,
-                complexity: prevState.codeOMatic.complexity
+                complexity: prevState.codeOMatic.complexity,
+                unlockedBanks: prevState.sampleBanks.unlockedBanks,
+                bankVariants: prevState.sampleBanks.bankVariants
               };
               
               finalStrudelCode = codeGenerator.generatePattern(generationContext);
@@ -439,6 +446,31 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Check for unlocked hardware items (these are direct purchases, not types)
         // No specific unlock logic here, just that they become buyable if their type is unlocked
         // and base cost is met, handled by HardwareShop component.
+
+        // Check for automatic sample bank unlocks
+        const progressionUnlocks = getSampleUnlockProgression(updatedState.beats);
+        const newUnlockedBanks = progressionUnlocks.filter(bankId => 
+          !updatedState.sampleBanks.unlockedBanks.includes(bankId)
+        );
+        
+        if (newUnlockedBanks.length > 0) {
+          updatedState.sampleBanks = {
+            ...updatedState.sampleBanks,
+            unlockedBanks: [...updatedState.sampleBanks.unlockedBanks, ...newUnlockedBanks],
+          };
+          
+          // Initialize bank variants for new banks (first variant unlocked)
+          for (const bankId of newUnlockedBanks) {
+            if (!updatedState.sampleBanks.bankVariants[bankId]) {
+              updatedState.sampleBanks.bankVariants[bankId] = [0];
+              updatedState.sampleBanks.totalSamplesUnlocked += 1;
+            }
+            const bank = SAMPLE_BANKS[bankId];
+            if (bank) {
+              addNews(`🎵 New sample bank available: ${bank.name}!`);
+            }
+          }
+        }
 
         // Check achievements
         const newAchievements = checkAchievements(updatedState, prevState.achievements);
@@ -635,6 +667,66 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   }, []);
 
+  // Sample bank functions
+  const purchaseSampleBank = useCallback((bankId: string) => {
+    setGameState(prevState => {
+      const bank = SAMPLE_BANKS[bankId];
+      if (!bank) return prevState;
+      
+      if (prevState.beats >= bank.unlockCost && !prevState.sampleBanks.unlockedBanks.includes(bankId)) {
+        addNews(`🎵 Sample bank unlocked: ${bank.name}!`);
+        return {
+          ...prevState,
+          beats: prevState.beats - bank.unlockCost,
+          sampleBanks: {
+            ...prevState.sampleBanks,
+            unlockedBanks: [...prevState.sampleBanks.unlockedBanks, bankId],
+            bankVariants: {
+              ...prevState.sampleBanks.bankVariants,
+              [bankId]: [0] // Unlock first variant
+            },
+            totalSamplesUnlocked: prevState.sampleBanks.totalSamplesUnlocked + 1,
+          },
+        };
+      }
+      return prevState;
+    });
+  }, [addNews]);
+
+  const purchaseSampleVariant = useCallback((bankId: string, variantIndex: number) => {
+    setGameState(prevState => {
+      const bank = SAMPLE_BANKS[bankId];
+      if (!bank || variantIndex >= bank.variantCount) return prevState;
+      
+      const variant = bank.variants[variantIndex];
+      const currentVariants = prevState.sampleBanks.bankVariants[bankId] || [];
+      
+      if (prevState.beats >= variant.unlockCost && !currentVariants.includes(variantIndex)) {
+        addNews(`🔊 New variant unlocked: ${bank.name} #${variantIndex}!`);
+        return {
+          ...prevState,
+          beats: prevState.beats - variant.unlockCost,
+          sampleBanks: {
+            ...prevState.sampleBanks,
+            bankVariants: {
+              ...prevState.sampleBanks.bankVariants,
+              [bankId]: [...currentVariants, variantIndex].sort((a, b) => a - b),
+            },
+            totalSamplesUnlocked: prevState.sampleBanks.totalSamplesUnlocked + 1,
+          },
+        };
+      }
+      return prevState;
+    });
+  }, [addNews]);
+
+  const setActiveSample = useCallback((sample: string) => {
+    setGameState(prevState => ({
+      ...prevState,
+      strudelCode: `s("${sample}")`,
+    }));
+  }, []);
+
   const contextValue = useMemo(() => ({
     gameState,
     setGameState,
@@ -649,7 +741,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     purchaseCodeOMatic,
     toggleCodeOMatic,
     setCodeOMaticComplexity,
-  }), [gameState, setGameState, addBeats, purchaseModule, purchaseHardware, addNews, purchasePhase, purchaseFeature, purchaseCodeOMatic, toggleCodeOMatic, setCodeOMaticComplexity]);
+    // Sample banks
+    purchaseSampleBank,
+    purchaseSampleVariant,
+    setActiveSample,
+  }), [gameState, setGameState, addBeats, purchaseModule, purchaseHardware, addNews, purchasePhase, purchaseFeature, purchaseCodeOMatic, toggleCodeOMatic, setCodeOMaticComplexity, purchaseSampleBank, purchaseSampleVariant, setActiveSample]);
 
   return (
     <GameContext.Provider value={contextValue}>

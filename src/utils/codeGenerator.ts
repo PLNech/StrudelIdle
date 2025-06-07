@@ -1,11 +1,15 @@
 // src/utils/codeGenerator.ts - Generative code system for Code-o-matic
 
 import { ProgressionFeature } from '../data/progression';
+import { getAvailableSamples } from '../data/sampleScanner';
 
 export interface GenerationContext {
   unlockedFeatures: ProgressionFeature[];
   complexity: number; // 0-1, affects how many features to combine
   preferredCategory?: 'sound' | 'notation' | 'effect' | 'pattern' | 'advanced';
+  // Sample bank context
+  unlockedBanks: string[];
+  bankVariants: { [bankId: string]: number[] };
 }
 
 // Basic sound samples available at the start
@@ -58,9 +62,15 @@ export class CodeGenerator {
 
   // Generate basic drum pattern
   private generateDrumPattern(context: GenerationContext): string {
-    const availableSamples = [...BASIC_SAMPLES];
+    // Use available samples from unlocked sample banks
+    let availableSamples = getAvailableSamples(context.unlockedBanks, context.bankVariants);
     
-    // Add extended samples if unlocked
+    // Fallback to basic samples if no sample banks unlocked
+    if (availableSamples.length === 0) {
+      availableSamples = [...BASIC_SAMPLES];
+    }
+    
+    // Add extended samples if unlocked (legacy support)
     if (this.hasFeature(context, 'sample_banks')) {
       availableSamples.push(...EXTENDED_SAMPLES);
     }
