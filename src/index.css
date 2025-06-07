@@ -65,10 +65,10 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
+  padding: 0;
   min-width: 320px;
   min-height: 100vh;
+  overflow-x: auto;
 }
 
 h1 {
@@ -147,7 +147,7 @@ button:focus-visible {
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-body {
+body, :root {
   /* Force dark theme always */
   --background: oklch(0.09 0.01 240);
   --foreground: oklch(0.98 0.002 240);
@@ -188,5 +188,12 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+    min-height: 100vh;
+  }
+  
+  /* Ensure no element causes black screen */
+  #root {
+    min-height: 100vh;
+    background: transparent;
   }
 }

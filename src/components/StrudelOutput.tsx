@@ -96,7 +96,7 @@ const StrudelOutput: React.FC = () => {
             </div>
           </div>
           <div className="mt-2">
-            <strong>Active Modules:</strong> {gameState.modules.filter(m => m.count > 0).length}
+            <strong>Active Modules:</strong> {Object.values(gameState.modules).filter(m => m.acquiredCount > 0).length}
           </div>
           <div className="mt-1">
             <strong>Raw Pattern:</strong>

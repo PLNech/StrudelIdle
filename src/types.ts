@@ -84,6 +84,17 @@ export interface GameState {
   strudelCode: string; // The current Strudel.cc code being played
   strudelBPM: number; // The current BPM for Strudel.cc (visible to user)
   hasLooping: boolean; // Whether looping is enabled
+  // New progression system
+  unlockedPhases: string[];
+  unlockedFeatures: string[];
+  codeOMatic: {
+    enabled: boolean;
+    purchased: boolean;
+    cost: number;
+    generationInterval: number;
+    lastGeneration: number;
+    complexity: number; // 0-1
+  };
 }
 
 // Initial game state for a new game
@@ -108,4 +119,15 @@ export const INITIAL_GAME_STATE: GameState = {
   strudelCode: 's("bd")', // Initial sound
   strudelBPM: 60, // Very slow at first
   hasLooping: false, // No looping initially
+  // New progression system
+  unlockedPhases: ['first_sounds'], // First phase always unlocked
+  unlockedFeatures: ['basic_drums'], // Basic drums always available
+  codeOMatic: {
+    enabled: false,
+    purchased: false,
+    cost: 1000,
+    generationInterval: 10,
+    lastGeneration: 0,
+    complexity: 0.3 // Start with moderate complexity
+  },
 };

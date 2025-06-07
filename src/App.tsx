@@ -6,6 +6,8 @@ import BeatDisplay from './components/BeatDisplay';
 import Clicker from './components/Clicker';
 import ModuleShop from './components/ModuleShop';
 import HardwareShop from './components/HardwareShop';
+import ProgressionShop from './components/ProgressionShop';
+import CodeOMatic from './components/CodeOMatic';
 import NewsFeed from './components/NewsFeed';
 import StrudelOutput from './components/StrudelOutput';
 import AchievementsDisplay from './components/AchievementsDisplay';
@@ -60,10 +62,16 @@ const GameContent: React.FC = () => {
           {/* Center - Main Shops */}
           <div className="xl:col-span-5 flex flex-col space-y-6">
             <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
-              <ModuleShop />
+              <ProgressionShop />
+            </div>
+            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+              <CodeOMatic />
             </div>
             <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
               <HardwareShop />
+            </div>
+            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl border border-border/50 shadow-lg backdrop-blur-sm">
+              <ModuleShop />
             </div>
           </div>
 
@@ -89,8 +97,16 @@ const GameContent: React.FC = () => {
               <span className="text-border">•</span>
               <span>Educational Music Game</span>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-4">
               <span>Inspired by live coding & idle games</span>
+              <a 
+                href="https://strudel.cc/learn/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 hover:text-primary transition-colors"
+              >
+                📖📀 Strudel Docs
+              </a>
             </div>
           </div>
         </div>

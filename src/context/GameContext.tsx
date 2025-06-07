@@ -13,6 +13,8 @@ function getModuleEffectiveBPS(module: Module): number {
 }
 import { ALL_HARDWARE, getHardwareCost } from '../data/hardware';
 import { initializeAchievements, checkAchievements } from '../data/achievements';
+import { ALL_PHASES } from '../data/progression';
+import { CodeGenerator } from '../utils/codeGenerator';
 
 interface GameContextType {
   gameState: GameState;
@@ -21,7 +23,13 @@ interface GameContextType {
   purchaseModule: (moduleId: string) => void;
   purchaseHardware: (hardwareId: string) => void;
   addNews: (message: string) => void;
-  // TODO: Add more actions like selling, upgrading variants, prestige, etc.
+  // New progression system
+  purchasePhase: (phaseId: string, cost: number) => void;
+  purchaseFeature: (featureId: string, cost: number) => void;
+  // Code-o-matic
+  purchaseCodeOMatic: () => void;
+  toggleCodeOMatic: () => void;
+  setCodeOMaticComplexity: (complexity: number) => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -288,15 +296,48 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         newBeats = prevState.beats + currentBPS * deltaTime; // Update beats after penalty
 
 
+        // Code-o-matic pattern generation
+        let finalStrudelCode = currentStrudelCode;
+        let updatedCodeOMatic = prevState.codeOMatic;
+        
+        if (prevState.codeOMatic.purchased && prevState.codeOMatic.enabled) {
+          const timeSinceLastGeneration = (Date.now() - prevState.codeOMatic.lastGeneration) / 1000;
+          
+          if (timeSinceLastGeneration >= prevState.codeOMatic.generationInterval) {
+            try {
+              const codeGenerator = new CodeGenerator();
+              const unlockedFeatures = ALL_PHASES
+                .flatMap(phase => phase.features)
+                .filter(feature => prevState.unlockedFeatures.includes(feature.id));
+              
+              const generationContext = {
+                unlockedFeatures,
+                complexity: prevState.codeOMatic.complexity
+              };
+              
+              finalStrudelCode = codeGenerator.generatePattern(generationContext);
+              updatedCodeOMatic = {
+                ...prevState.codeOMatic,
+                lastGeneration: Date.now()
+              };
+              
+              console.log('Code-o-matic generated:', finalStrudelCode);
+            } catch (error) {
+              console.error('Code-o-matic generation error:', error);
+            }
+          }
+        }
+
         const updatedState: GameState = {
           ...prevState,
           beats: newBeats,
           bps: currentBPS,
           hardware: newHardware,
           gameTime: prevState.gameTime + deltaTime, // Use delta from gameLoop
-          strudelCode: currentStrudelCode,
+          strudelCode: finalStrudelCode,
           strudelBPM: currentStrudelBPM,
           hasLooping: currentHasLooping,
+          codeOMatic: updatedCodeOMatic,
           // TODO: Update audience metrics based on active modules and other factors
         };
 
@@ -521,6 +562,79 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, [addNews]);
 
+  // New progression system functions
+  const purchasePhase = useCallback((phaseId: string, cost: number) => {
+    setGameState(prevState => {
+      if (prevState.beats >= cost && !prevState.unlockedPhases.includes(phaseId)) {
+        addNews(`🎓 Phase unlocked: ${phaseId.replace('_', ' ').toUpperCase()}!`);
+        return {
+          ...prevState,
+          beats: prevState.beats - cost,
+          unlockedPhases: [...prevState.unlockedPhases, phaseId],
+        };
+      }
+      return prevState;
+    });
+  }, [addNews]);
+
+  const purchaseFeature = useCallback((featureId: string, cost: number) => {
+    setGameState(prevState => {
+      if (prevState.beats >= cost && !prevState.unlockedFeatures.includes(featureId)) {
+        // Find the feature to get its name
+        const feature = ALL_PHASES
+          .flatMap(phase => phase.features)
+          .find(f => f.id === featureId);
+        
+        addNews(`✨ New feature learned: ${feature?.name || featureId}!`);
+        return {
+          ...prevState,
+          beats: prevState.beats - cost,
+          unlockedFeatures: [...prevState.unlockedFeatures, featureId],
+        };
+      }
+      return prevState;
+    });
+  }, [addNews]);
+
+  // Code-o-matic functions
+  const purchaseCodeOMatic = useCallback(() => {
+    setGameState(prevState => {
+      if (prevState.beats >= prevState.codeOMatic.cost && !prevState.codeOMatic.purchased) {
+        addNews(`🤖 Code-o-matic purchased! Auto-generation enabled.`);
+        return {
+          ...prevState,
+          beats: prevState.beats - prevState.codeOMatic.cost,
+          codeOMatic: {
+            ...prevState.codeOMatic,
+            purchased: true,
+          },
+        };
+      }
+      return prevState;
+    });
+  }, [addNews]);
+
+  const toggleCodeOMatic = useCallback(() => {
+    setGameState(prevState => ({
+      ...prevState,
+      codeOMatic: {
+        ...prevState.codeOMatic,
+        enabled: !prevState.codeOMatic.enabled,
+        lastGeneration: Date.now(), // Reset timer when toggling
+      },
+    }));
+  }, []);
+
+  const setCodeOMaticComplexity = useCallback((complexity: number) => {
+    setGameState(prevState => ({
+      ...prevState,
+      codeOMatic: {
+        ...prevState.codeOMatic,
+        complexity: Math.max(0, Math.min(1, complexity)),
+      },
+    }));
+  }, []);
+
   const contextValue = useMemo(() => ({
     gameState,
     setGameState,
@@ -528,7 +642,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     purchaseModule,
     purchaseHardware,
     addNews,
-  }), [gameState, setGameState, addBeats, purchaseModule, purchaseHardware, addNews]);
+    // New progression system
+    purchasePhase,
+    purchaseFeature,
+    // Code-o-matic
+    purchaseCodeOMatic,
+    toggleCodeOMatic,
+    setCodeOMaticComplexity,
+  }), [gameState, setGameState, addBeats, purchaseModule, purchaseHardware, addNews, purchasePhase, purchaseFeature, purchaseCodeOMatic, toggleCodeOMatic, setCodeOMaticComplexity]);
 
   return (
     <GameContext.Provider value={contextValue}>

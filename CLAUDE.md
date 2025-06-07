@@ -4,6 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
+### Git & Version Control
+- **Check differences**: `git diff` to see changes
+- **View commit history**: `git log --oneline` for recent commits  
+- **Check status**: `git status` to see current state
+- **View specific diff**: `git show <commit-hash>` for specific commit changes
+
 ### Build & Development
 - **Start development server**: `npm run dev`
 - **Build for production**: `npm run build` (runs TypeScript compilation then Vite build)
