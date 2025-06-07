@@ -1,4 +1,5 @@
 // src/types.ts
+import { ASTNode } from './types/ast';
 
 export type ModuleType = 'sample' | 'synth' | 'effect' | 'refactor';
 
@@ -134,6 +135,21 @@ export interface GameState {
     autoSaveInterval: number; // Auto-save interval in minutes
     lastAutoSave: number; // Timestamp of last auto-save
   };
+  // AST Pattern System
+  patternAST: {
+    line1: ASTNode | null; // AST for sound line 1
+    line2: ASTNode | null; // AST for sound line 2
+    line3: ASTNode | null; // AST for sound line 3
+    line4: ASTNode | null; // AST for sound line 4
+  };
+  interactiveMode: boolean; // Whether interactive pattern editing is enabled
+  sampleUsageStats: { // Track sample usage for achievements
+    [sampleName: string]: {
+      timesUsed: number;
+      totalPlayTimeSeconds: number;
+      lastUsed: number;
+    };
+  };
 }
 
 // Initial game state for a new game
@@ -209,4 +225,13 @@ export const INITIAL_GAME_STATE: GameState = {
     autoSaveInterval: 1, // Auto-save every minute
     lastAutoSave: Date.now(), // Initialize with current time
   },
+  // AST Pattern System
+  patternAST: {
+    line1: null,
+    line2: null, 
+    line3: null,
+    line4: null,
+  },
+  interactiveMode: false, // Start with simple mode, unlock later
+  sampleUsageStats: {},
 };
