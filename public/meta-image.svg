@@ -78,5 +78,5 @@
   
   <!-- Powered by Strudel -->
   <text x="600" y="580" font-family="monospace" font-size="14" 
-        fill="#64748b" text-anchor="middle">Powered by Strudel.cc • Made with <lt />3 by PLN and Claude></text>
+        fill="#64748b" text-anchor="middle">Powered by Strudel.cc • Made with &lt;3 by PLN and Claude></text>
 </svg>
