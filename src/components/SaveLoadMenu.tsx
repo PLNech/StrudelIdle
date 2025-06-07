@@ -125,23 +125,24 @@ const SaveLoadMenu: React.FC = () => {
       <div className="flex items-center gap-2">
         <Button 
           onClick={() => setIsOpen(true)}
-          className="fixed top-4 right-4 z-50"
           variant="outline"
+          size="sm"
           data-testid="save-menu-button"
+          className="bg-background/80 backdrop-blur-sm"
         >
           💾 Save/Load
         </Button>
         
-        {/* Auto-save status indicator */}
+        {/* Auto-save status indicator - positioned relative to button */}
         {autoSaveStatus && (
-          <div className="fixed top-16 right-4 z-50 bg-green-100 border border-green-300 text-green-800 px-3 py-1 rounded-lg text-sm">
+          <div className="absolute top-12 right-0 z-50 bg-green-100 border border-green-300 text-green-800 px-3 py-1 rounded-lg text-sm whitespace-nowrap">
             {autoSaveStatus}
           </div>
         )}
         
-        {/* Auto-save indicator */}
+        {/* Auto-save indicator - positioned to the left of the button */}
         {gameState.saveSettings.autoSave && (
-          <div className="fixed top-4 right-32 z-40 bg-primary/10 border border-primary/20 text-primary px-2 py-1 rounded text-xs">
+          <div className="absolute top-0 right-28 bg-primary/10 border border-primary/20 text-primary px-2 py-1 rounded text-xs whitespace-nowrap">
             Auto-save: {getTimeSinceAutoSave()}
           </div>
         )}

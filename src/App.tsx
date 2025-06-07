@@ -34,17 +34,24 @@ const GameContent: React.FC = () => {
       {/* Header */}
       <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-4 mb-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">🎵</span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-                StrudelIdle
-              </h1>
+          <div className="relative">
+            {/* Save button in top right */}
+            <div className="absolute top-0 right-0">
+              <SaveLoadMenu />
             </div>
-            <div className="text-sm text-muted-foreground">
-              Real-time live coding • Powered by Strudel.cc
+            
+            <div className="text-center">
+              <div className="flex items-center justify-center space-x-4 mb-2">
+                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold text-sm">🎵</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+                  StrudelIdle
+                </h1>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Real-time live coding • Powered by Strudel.cc
+              </div>
             </div>
           </div>
         </div>
@@ -156,7 +163,6 @@ const GameContent: React.FC = () => {
       </footer>
       
       {/* Modals & Overlays */}
-      <SaveLoadMenu />
       <Settings />
       
       {/* Achievement Notifications */}
